@@ -1,7 +1,4 @@
 const bcrypt = require("bcryptjs");
-const mysql = require("mysql2/promise");
-const config = require("../model/config");
-const pool = mysql.createPool(config);
 const {
   insertData,
   selectData,
