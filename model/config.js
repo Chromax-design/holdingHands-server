@@ -1,9 +1,8 @@
 const config = {
-    connectionLimit: 10,
-    host: "localhost",
-    user: "root",
-    password: "",
-    database: "holdinghands"
+    host: process.env.DBHOST,
+    user: process.env.DBUSER,
+    password: process.env.DBPASSWORD,
+    database: process.env.DATABASE
 }
 
 module.exports= config;
