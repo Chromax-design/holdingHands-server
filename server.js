@@ -11,7 +11,7 @@ const { app, server } = require("./socket/socket");
 
 dotenv.config();
 const corsOptions = {
-  origin: ["https://holdinghands.onrender.com/", "https://localhost:5173"],
+  origin: "https://holdinghands.onrender.com",
   methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
   credentials: true, // Enable cookies and HTTP authentication with credentials
 };
