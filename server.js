@@ -26,6 +26,31 @@ app.use("/", chatRouter, messageRouter);
 app.use("/stripe", stripeRouter);
 app.use(express.static("ChatDocs"));
 
+const stripe = require("stripe")(
+  "sk_test_51N2arXIYmnZ4DnJJvdhuSNisgQ3UPhiAC7ZP9YmvKBlMSwNvw713RRa2XJ3JKYTOuMq1Duzs19PCVDsvdZjL3Kyt00engCA6v9"
+);
+
+const endpointSecret = "whsec_0aca88c34f921fe2deb64308d4610653243e1f8a0cb34f9ca2c1aa22a879e57f";
+
+app.post('/stripe/webhook', express.raw({type: 'application/json'}), (request, response) => {
+  const sig = request.headers['stripe-signature'];
+
+  let event;
+
+  try {
+    event = stripe.webhooks.constructEvent(request.body, sig, endpointSecret);
+  } catch (err) {
+    response.status(400).send(`Webhook Error: ${err.message}`);
+    return;
+  }
+
+  // Handle the event
+  console.log(`Unhandled event type ${event.type}`);
+
+  // Return a 200 response to acknowledge receipt of the event
+  response.send();
+});
+
 connectDB();
 
 const port = process.env.PORT || 3000;
