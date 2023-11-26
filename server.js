@@ -34,7 +34,6 @@ const endpointSecret = "whsec_4VUWOf4u75Hmjw9GMNb842NVifQPrSCf";
 
 app.post('/stripe/webhook', express.raw({type: 'application/json'}), (request, response) => {
   const sig = request.headers['stripe-signature'];
-  console.log('fired')
   let event;
 
   try {
@@ -44,6 +43,7 @@ app.post('/stripe/webhook', express.raw({type: 'application/json'}), (request, r
     response.status(400).send(`Webhook Error: ${err.message}`);
     return;
   }
+  console.log('payment succeeded')
 
   if (event.type === "checkout.session.completed") {
     const session = event.data.object;
