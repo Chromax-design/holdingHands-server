@@ -23,7 +23,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use("/mentee", menteeRouter);
 app.use("/mentor", mentorRouter);
 app.use("/", chatRouter, messageRouter);
-app.use("/stripe", stripeRouter);
+// app.use("/stripe", stripeRouter);
 app.use(express.static("ChatDocs"));
 
 const stripe = require("stripe")(
@@ -50,6 +50,29 @@ app.post('/stripe/webhook', express.raw({type: 'application/json'}), (request, r
   // Return a 200 response to acknowledge receipt of the event
   response.send();
 });
+
+app.post("/stripe/create-checkout-session", async (req, res) => {
+  const { product } = req.body;
+  const session = await stripe.checkout.sessions.create({
+    payment_method_types: ["card"],
+    line_items: [
+      {
+        price_data: {
+          currency: "inr",
+          product_data: {
+            name: product.name,
+          },
+          unit_amount: product.price * 100,
+        },
+        quantity: product.quantity,
+      },
+    ],
+    mode: "payment",
+    success_url: `${process.env.FRONTEND_URL}/stripe/success`,
+    cancel_url: `${process.env.FRONTEND_URL}/stripe/cancel`,
+  });
+  res.json({ id: session.id });
+})
 
 connectDB();
 
