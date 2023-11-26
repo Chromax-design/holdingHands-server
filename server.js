@@ -44,8 +44,16 @@ app.post('/stripe/webhook', express.raw({type: 'application/json'}), (request, r
     return;
   }
 
-  // Handle the event
-  console.log(`Unhandled event type ${event.type}`);
+  if (event.type === "checkout.session.completed") {
+    const session = event.data.object;
+
+    // You can now access information about the successful payment in `session`
+
+    // Perform actions like storing the payment information in your database
+    // Example: savePaymentInDatabase(session);
+
+    console.log("Payment succeeded:", session);
+  }
 
   // Return a 200 response to acknowledge receipt of the event
   response.send();
