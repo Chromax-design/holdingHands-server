@@ -9,7 +9,6 @@ const stripeRouter = express.Router();
 stripeRouter.post("/create-checkout-session", CheckoutSession);
 stripeRouter.post(
   "/webhook",
-  express.raw({ type: "application/json" }),
   webHook
 );
 module.exports = stripeRouter;

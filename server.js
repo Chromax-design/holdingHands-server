@@ -8,6 +8,7 @@ const chatRouter = require("./routes/chatRoutes");
 const messageRouter = require("./routes/messageRoutes");
 const stripeRouter = require("./routes/stripeRoutes");
 const { app, server } = require("./socket/socket");
+const bodyParser = require("body-parser");
 
 dotenv.config();
 const corsOptions = {
@@ -24,6 +25,7 @@ app.use("/mentee", menteeRouter);
 app.use("/mentor", mentorRouter);
 app.use("/", chatRouter, messageRouter);
 app.use("/stripe", stripeRouter);
+app.use("/stripe/webhook", bodyParser.raw({ type: "application/json" }));
 app.use(express.static("ChatDocs"));
 
 connectDB();
