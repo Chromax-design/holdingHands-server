@@ -7,6 +7,14 @@ const pool = mysql.createPool({
   waitForConnections: true,
   connectionLimit: 10,
 });
+// const pool = mysql.createPool({
+//   host: 'localhost',
+//   user: 'root',
+//   password: '',
+//   database: 'holdinghands',
+//   waitForConnections: true,
+//   connectionLimit: 10,
+// });
 
 const insertData = async (tableName, data) => {
   const sql = `INSERT INTO ${tableName} SET ?`;
