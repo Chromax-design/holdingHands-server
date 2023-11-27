@@ -92,7 +92,7 @@ app.post(
     switch (event.type) {
       case "payment_intent.succeeded":
         const paymentIntent = event.data.object;
-        console.log("PaymentIntent was successful!");
+        console.log(paymentIntent);
         break;
       case "payment_method.attached":
         const paymentMethod = event.data.object;
