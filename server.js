@@ -20,6 +20,8 @@ app.use(cors(corsOptions));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+
+
 // mentee routes
 app.use("/mentee", menteeRouter);
 app.use("/mentor", mentorRouter);
