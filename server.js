@@ -32,24 +32,25 @@ const stripe = require("stripe")(
 
 app.post(
   "/stripe/webhook",
-  (request, response) => {
-    const sig = request.headers["stripe-signature"];
-    const payload = request.body;
-    const endpointSecret =
-      // "whsec_0aca88c34f921fe2deb64308d4610653243e1f8a0cb34f9ca2c1aa22a879e57f";
-      "whsec_bzTc1zONuvpiEBpYE1BiHTngP7FIKhKw";
-      const payloadString = JSON.stringify(payload, null, 2);
+  (req, res) => {
+    const event = req.body;
+    // const sig = request.headers["stripe-signature"];
+    // const payload = request.body;
+    // const endpointSecret =
+    //   // "whsec_0aca88c34f921fe2deb64308d4610653243e1f8a0cb34f9ca2c1aa22a879e57f";
+    //   "whsec_bzTc1zONuvpiEBpYE1BiHTngP7FIKhKw";
+    //   const payloadString = JSON.stringify(payload, null, 2);
 
-    let event;
+    // let event;
 
 
-    try {
-      event = stripe.webhooks.constructEvent(payloadString, sig, endpointSecret);
-    } catch (err) {
-      response.status(400).send(`Webhook Error: ${err.message}`);
-      console.error('Webhook signature verification failed.', err);
-      return;
-    }
+    // try {
+    //   event = stripe.webhooks.constructEvent(payloadString, sig, endpointSecret);
+    // } catch (err) {
+    //   response.status(400).send(`Webhook Error: ${err.message}`);
+    //   console.error('Webhook signature verification failed.', err);
+    //   return;
+    // }
 
     // switch (event.type) {
     //   case "payment_intent.amount_capturable_updated":
@@ -103,7 +104,7 @@ app.post(
     }
 
     // Return a response to acknowledge receipt of the event
-    response.json({ received: true });
+    res.json({ received: true });
   }
 );
 
