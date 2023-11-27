@@ -30,14 +30,15 @@ const stripe = require("stripe")(
   "sk_test_51N2arXIYmnZ4DnJJvdhuSNisgQ3UPhiAC7ZP9YmvKBlMSwNvw713RRa2XJ3JKYTOuMq1Duzs19PCVDsvdZjL3Kyt00engCA6v9"
 );
 
-// const endpointSecret = "whsec_0aca88c34f921fe2deb64308d4610653243e1f8a0cb34f9ca2c1aa22a879e57f";
 
 app.post(
   "/stripe/webhook",
   express.raw({ type: "application/json" }),
   (request, response) => {
     const sig = request.headers["stripe-signature"];
-    const endpointSecret = "we_1OGxLcIYmnZ4DnJJ85o6DbI5";
+    // const endpointSecret = "we_1OGxLcIYmnZ4DnJJ85o6DbI5";
+const endpointSecret = "whsec_0aca88c34f921fe2deb64308d4610653243e1f8a0cb34f9ca2c1aa22a879e57f";
+
     
     let event;
 
@@ -103,8 +104,6 @@ app.post(
     response.json({received: true});
   }
 );
-
-app.listen(4242, () => console.log("Running on port 4242"));
 
 app.post("/stripe/create-checkout-session", async (req, res) => {
   const { product } = req.body;
