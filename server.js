@@ -45,6 +45,7 @@ app.post(
       event = stripe.webhooks.constructEvent(request.body, sig, endpointSecret);
     } catch (err) {
       response.status(400).send(`Webhook Error: ${err.message}`);
+      console.error('Webhook signature verification failed.', err);
       return;
     }
 
