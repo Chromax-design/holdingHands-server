@@ -30,35 +30,37 @@ const stripe = require("stripe")(
   "sk_test_51N2arXIYmnZ4DnJJvdhuSNisgQ3UPhiAC7ZP9YmvKBlMSwNvw713RRa2XJ3JKYTOuMq1Duzs19PCVDsvdZjL3Kyt00engCA6v9"
 );
 
-const endpointSecret = "whsec_0aca88c34f921fe2deb64308d4610653243e1f8a0cb34f9ca2c1aa22a879e57f";
+const endpointSecret =
+  "whsec_0aca88c34f921fe2deb64308d4610653243e1f8a0cb34f9ca2c1aa22a879e57f";
 
-app.post('/stripe/webhook', express.raw({type: 'application/json'}), (request, response) => {
-  const sig = request.headers['stripe-signature'];
-  let event;
+app.post(
+  "/stripe/webhook",
+  express.json({ type: "application/json" }),
+  (request, response) => {
+    const sig = request.headers["stripe-signature"];
+    let event;
 
-  try {
-    event = stripe.webhooks.constructEvent(request.body, sig, endpointSecret);
-    console.log(event)
-  } catch (err) {
-    response.status(400).send(`Webhook Error: ${err.message}`);
-    return;
+    switch (event.type) {
+      case "payment_intent.succeeded":
+        const paymentIntent = event.data.object;
+        console.log(paymentIntent)
+        // Then define and call a method to handle the successful payment intent.
+        // handlePaymentIntentSucceeded(paymentIntent);
+        break;
+      case "payment_method.attached":
+        const paymentMethod = event.data.object;
+        console.log(paymentMethod)
+        // Then define and call a method to handle the successful attachment of a PaymentMethod.
+        // handlePaymentMethodAttached(paymentMethod);
+        break;
+      // ... handle other event types
+      default:
+        console.log(`Unhandled event type ${event.type}`);
+    }
+    // Return a 200 response to acknowledge receipt of the event
+    response.json({received: true});
   }
-  console.log('payment succeeded')
-
-  if (event.type === "checkout.session.completed") {
-    const session = event.data.object;
-
-    // You can now access information about the successful payment in `session`
-
-    // Perform actions like storing the payment information in your database
-    // Example: savePaymentInDatabase(session);
-
-    console.log("Payment succeeded:", session);
-  }
-
-  // Return a 200 response to acknowledge receipt of the event
-  response.send();
-});
+);
 
 app.post("/stripe/create-checkout-session", async (req, res) => {
   const { product } = req.body;
@@ -81,7 +83,7 @@ app.post("/stripe/create-checkout-session", async (req, res) => {
     cancel_url: `${process.env.FRONTEND_URL}/stripe/cancel`,
   });
   res.json({ id: session.id });
-})
+});
 
 connectDB();
 
