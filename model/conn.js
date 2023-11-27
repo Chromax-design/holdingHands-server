@@ -18,10 +18,10 @@ const connectDB = () => {
 
 // const connectDB = () => {
 //   const pool = mysql.createPool({
-//     host: process.env.DBHOST,
-//     user: process.env.DBUSER,
-//     password: process.env.DBPASSWORD,
-//     database: process.env.DATABASE,
+//     host: 'localhost',
+//     user: 'root',
+//     password: '',
+//     database: 'holdinghands',
 //     waitForConnections: true,
 //     connectionLimit: 10,
 //   });
