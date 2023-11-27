@@ -5,8 +5,8 @@ const http = require("http");
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
-    // origin: ["https://holdinghands.onrender.com", "https://localhost:5173"],
-    origin: "http://localhost:5173",
+    origin: "https://holdinghands.onrender.com",
+    // origin: "http://localhost:5173",
   },
 });
 
