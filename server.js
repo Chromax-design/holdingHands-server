@@ -6,7 +6,7 @@ const connectDB = require("./model/conn");
 const mentorRouter = require("./routes/mentorRoutes");
 const chatRouter = require("./routes/chatRoutes");
 const messageRouter = require("./routes/messageRoutes");
-const stripeRouter = require("./routes/stripeRoutes");
+// const stripeRouter = require("./routes/stripeRoutes");
 const { app, server } = require("./socket/socket");
 
 dotenv.config();
@@ -30,47 +30,81 @@ const stripe = require("stripe")(
   "sk_test_51N2arXIYmnZ4DnJJvdhuSNisgQ3UPhiAC7ZP9YmvKBlMSwNvw713RRa2XJ3JKYTOuMq1Duzs19PCVDsvdZjL3Kyt00engCA6v9"
 );
 
-
+// const endpointSecret = "whsec_0aca88c34f921fe2deb64308d4610653243e1f8a0cb34f9ca2c1aa22a879e57f";
 
 app.post(
   "/stripe/webhook",
-  express.json({ type: "application/json" }),
+  express.raw({ type: "application/json" }),
   (request, response) => {
-    const payload = request.body;
     const sig = request.headers["stripe-signature"];
-    const endpointSecret =
-  "whsec_0aca88c34f921fe2deb64308d4610653243e1f8a0cb34f9ca2c1aa22a879e57f";
-  
+    const endpointSecret = "we_1OGxLcIYmnZ4DnJJ85o6DbI5";
+    
     let event;
 
-  try {
-    event = stripe.webhooks.constructEvent(payload, sig, endpointSecret);
-  } catch (err) {
-    console.error('Webhook signature verification failed.', err);
-    return res.status(400).send('Webhook Error: Invalid signature');
-  }
+    try {
+      event = stripe.webhooks.constructEvent(request.body, sig, endpointSecret);
+    } catch (err) {
+      response.status(400).send(`Webhook Error: ${err.message}`);
+      return;
+    }
 
+    // switch (event.type) {
+    //   case "payment_intent.amount_capturable_updated":
+    //     const paymentIntentAmountCapturableUpdated = event.data.object;
+    //     // Then define and call a function to handle the event payment_intent.amount_capturable_updated
+    //     break;
+    //   case "payment_intent.canceled":
+    //     const paymentIntentCanceled = event.data.object;
+    //     // Then define and call a function to handle the event payment_intent.canceled
+    //     break;
+    //   case "payment_intent.created":
+    //     const paymentIntentCreated = event.data.object;
+    //     // Then define and call a function to handle the event payment_intent.created
+    //     break;
+    //   case "payment_intent.partially_funded":
+    //     const paymentIntentPartiallyFunded = event.data.object;
+    //     // Then define and call a function to handle the event payment_intent.partially_funded
+    //     break;
+    //   case "payment_intent.payment_failed":
+    //     const paymentIntentPaymentFailed = event.data.object;
+    //     // Then define and call a function to handle the event payment_intent.payment_failed
+    //     break;
+    //   case "payment_intent.processing":
+    //     const paymentIntentProcessing = event.data.object;
+    //     // Then define and call a function to handle the event payment_intent.processing
+    //     break;
+    //   case "payment_intent.requires_action":
+    //     const paymentIntentRequiresAction = event.data.object;
+    //     // Then define and call a function to handle the event payment_intent.requires_action
+    //     break;
+    //   case "payment_intent.succeeded":
+    //     const paymentIntentSucceeded = event.data.object;
+    //     // Then define and call a function to handle the event payment_intent.succeeded
+    //     break;
+    //   // ... handle other event types
+    //   default:
+    //     console.log(`Unhandled event type ${event.type}`);
+    // }
     switch (event.type) {
-      case "payment_intent.succeeded":
+      case 'payment_intent.succeeded':
         const paymentIntent = event.data.object;
-        console.log(paymentIntent)
-        // Then define and call a method to handle the successful payment intent.
-        // handlePaymentIntentSucceeded(paymentIntent);
+        console.log('PaymentIntent was successful!');
         break;
-      case "payment_method.attached":
+      case 'payment_method.attached':
         const paymentMethod = event.data.object;
-        console.log(paymentMethod)
-        // Then define and call a method to handle the successful attachment of a PaymentMethod.
-        // handlePaymentMethodAttached(paymentMethod);
+        console.log('PaymentMethod was attached to a Customer!');
         break;
       // ... handle other event types
       default:
         console.log(`Unhandled event type ${event.type}`);
     }
-    // Return a 200 response to acknowledge receipt of the event
+  
+    // Return a response to acknowledge receipt of the event
     response.json({received: true});
   }
 );
+
+app.listen(4242, () => console.log("Running on port 4242"));
 
 app.post("/stripe/create-checkout-session", async (req, res) => {
   const { product } = req.body;
