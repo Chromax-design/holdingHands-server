@@ -30,16 +30,15 @@ const stripe = require("stripe")(
   "sk_test_51N2arXIYmnZ4DnJJvdhuSNisgQ3UPhiAC7ZP9YmvKBlMSwNvw713RRa2XJ3JKYTOuMq1Duzs19PCVDsvdZjL3Kyt00engCA6v9"
 );
 
-
 app.post(
   "/stripe/webhook",
   express.raw({ type: "application/json" }),
   (request, response) => {
     const sig = request.headers["stripe-signature"];
-    // const endpointSecret = "we_1OGxLcIYmnZ4DnJJ85o6DbI5";
-const endpointSecret = "whsec_0aca88c34f921fe2deb64308d4610653243e1f8a0cb34f9ca2c1aa22a879e57f";
+    const endpointSecret =
+      // "whsec_0aca88c34f921fe2deb64308d4610653243e1f8a0cb34f9ca2c1aa22a879e57f";
+      "whsec_bzTc1zONuvpiEBpYE1BiHTngP7FIKhKw";
 
-    
     let event;
 
     try {
@@ -87,21 +86,21 @@ const endpointSecret = "whsec_0aca88c34f921fe2deb64308d4610653243e1f8a0cb34f9ca2
     //     console.log(`Unhandled event type ${event.type}`);
     // }
     switch (event.type) {
-      case 'payment_intent.succeeded':
+      case "payment_intent.succeeded":
         const paymentIntent = event.data.object;
-        console.log('PaymentIntent was successful!');
+        console.log("PaymentIntent was successful!");
         break;
-      case 'payment_method.attached':
+      case "payment_method.attached":
         const paymentMethod = event.data.object;
-        console.log('PaymentMethod was attached to a Customer!');
+        console.log("PaymentMethod was attached to a Customer!");
         break;
       // ... handle other event types
       default:
         console.log(`Unhandled event type ${event.type}`);
     }
-  
+
     // Return a response to acknowledge receipt of the event
-    response.json({received: true});
+    response.json({ received: true });
   }
 );
 
