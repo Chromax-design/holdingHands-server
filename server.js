@@ -30,15 +30,25 @@ const stripe = require("stripe")(
   "sk_test_51N2arXIYmnZ4DnJJvdhuSNisgQ3UPhiAC7ZP9YmvKBlMSwNvw713RRa2XJ3JKYTOuMq1Duzs19PCVDsvdZjL3Kyt00engCA6v9"
 );
 
-const endpointSecret =
-  "whsec_0aca88c34f921fe2deb64308d4610653243e1f8a0cb34f9ca2c1aa22a879e57f";
+
 
 app.post(
   "/stripe/webhook",
   express.json({ type: "application/json" }),
   (request, response) => {
+    const payload = request.body;
     const sig = request.headers["stripe-signature"];
+    const endpointSecret =
+  "whsec_0aca88c34f921fe2deb64308d4610653243e1f8a0cb34f9ca2c1aa22a879e57f";
+  
     let event;
+
+  try {
+    event = stripe.webhooks.constructEvent(payload, sig, endpointSecret);
+  } catch (err) {
+    console.error('Webhook signature verification failed.', err);
+    return res.status(400).send('Webhook Error: Invalid signature');
+  }
 
     switch (event.type) {
       case "payment_intent.succeeded":
