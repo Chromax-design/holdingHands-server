@@ -36,8 +36,8 @@ app.post(
     const sig = request.headers["stripe-signature"];
     const payload = request.body;
     const endpointSecret =
-      "whsec_0aca88c34f921fe2deb64308d4610653243e1f8a0cb34f9ca2c1aa22a879e57f";
-      // "whsec_bzTc1zONuvpiEBpYE1BiHTngP7FIKhKw";
+      // "whsec_0aca88c34f921fe2deb64308d4610653243e1f8a0cb34f9ca2c1aa22a879e57f";
+      "whsec_bzTc1zONuvpiEBpYE1BiHTngP7FIKhKw";
       const payloadString = JSON.stringify(payload, null, 2);
 
     let event;
