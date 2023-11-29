@@ -1,4 +1,6 @@
 const bcrypt = require("bcryptjs");
+const { v4: uuidv4 } = require("uuid");
+
 const {
   insertData,
   selectData,
@@ -15,9 +17,9 @@ cloudinary.config({
 });
 
 const {
-  generateToken,
   createMessage,
-  verifyToken,
+  verifyOTP,
+  generateOTP,
   genAccessToken,
 } = require("../utils/utilities");
 const sendEmail = require("../utils/mailer");
@@ -33,16 +35,17 @@ const getMenteeDetails = async (req, res) => {
 };
 
 const Register = async (req, res) => {
-  const { fullName, email, password, telNumber } = req.body;
+  const { firstName, initials, email, password, telNumber } = req.body;
   const saltRounds = 16;
   const salt = await bcrypt.genSalt(saltRounds);
   const hashedPassword = await bcrypt.hash(password, salt);
   const user = {
-    fullName,
+    userId: uuidv4(),
+    firstName,
+    initials,
     email,
     telNumber,
     password: hashedPassword,
-    verified: false,
   };
 
   const existingUsers = await selectData("mentees", "email", email);
@@ -52,38 +55,68 @@ const Register = async (req, res) => {
       .json({ success: false, message: "User already exists" });
   }
 
-  const { insertId } = await insertData("mentees", user);
-  const token = generateToken(insertId);
-  const redirectURL = `${process.env.FRONTEND_URL}/mentee/${insertId}/application`;
-  const verificationMessage = `To get started and enjoy all the benefits of our platform, we need to verify your email address. <br/>Please click the button below to verify your email address<br/>
-  Once you've verified your email, you'll have full access to your account and can start using our services immediately.`;
-  const verificationLink = `${process.env.BASE_URL}/mentee/verifyEmail${token.urlQuery}&redirect=${redirectURL}`;
-  const subject = "Verify your email";
-  const emailMessage = createMessage(
-    verificationMessage,
-    verificationLink,
-    subject,
-    "Verify your email"
-  );
+  await insertData("mentees", user);
+  const { otp, time } = generateOTP();
+  const otpMessage = `Dear ${user.firstName},<br/><br/>
+  We hope this message finds you well. As part of our commitment to ensuring the security of your account with weHoldaHand, we are implementing an additional layer of protection through OTP (One-Time Password) verification. Below is your code and it expires in 5mins`;
+  const subject = "OTP Verification for your weHoldaHand mentee Account";
+  const emailMessage = createMessage(otpMessage, subject, otp);
 
-  await sendEmail(email, subject, emailMessage, token.token);
-  await insertData("tokentable", { token: token.token });
+  await sendEmail(email, subject, emailMessage);
+  await insertData("otptable", {
+    otp: otp,
+    userId: user.userId,
+    timestamp: time,
+  });
 
   return res.status(200).json({
-    message: "An email verification link has been sent to your email address",
+    success: true,
+    message: "Your OTP has been sent to your email address",
   });
 };
 
-const verifyEmail = async (req, res) => {
-  const { userId, token, expirationTime, redirect } = req.query;
-  const invalidTokenURL = `${process.env.FRONTEND_URL}/auth/mentee/${userId}/invalidToken`;
-  const isTokenValid = verifyToken(token, expirationTime);
-  if (isTokenValid === true) {
-    await updateData("mentees", { verified: true }, "id", userId);
-    res.redirect(redirect);
+const verifyEmailOTP = async (req, res) => {
+  const { otp } = req.body;
+  const data = await selectData("otptable", "otp", otp);
+  if (data.length > 0) {
+    const storedTimestamp = data[0].timestamp;
+    if (verifyOTP(storedTimestamp)) {
+      return res.status(200).json({
+        success: true,
+        userId: data[0].userId,
+        message: "Registration successful",
+      });
+    } else {
+      return res.status(401).json({ expired: true, message: "OTP expired" });
+    }
   } else {
-    await deleteData("tokentable", "token", token);
-    res.redirect(invalidTokenURL);
+    return res.status(404).json({ success: false, message: "OTP not found" });
+  }
+};
+
+const resendEmailOTP = async (req, res) => {
+  const { email } = req.body;
+  const data = await selectData("mentees", "email", email);
+  if (data.length > 0) {
+    const { otp, time } = generateOTP();
+    const otpMessage = `Dear ${data[0].firstName},<br/><br/>
+    We hope this message finds you well. As part of our commitment to ensuring the security of your account with weHoldaHand, we are implementing an additional layer of protection through OTP (One-Time Password) verification. Below is your code and it expires in 5mins`;
+    const subject = "OTP Verification for your weHoldaHand mentee Account";
+    const emailMessage = createMessage(otpMessage, subject, otp);
+
+    await sendEmail(email, subject, emailMessage);
+    await insertData("otptable", {
+      otp: otp,
+      userId: data.userId,
+      timestamp: time,
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: "Your OTP has been sent to your email address",
+    });
+  } else {
+    return res.status(404).json({ message: "Email does not exist" });
   }
 };
 
@@ -108,7 +141,7 @@ const updateApplication = async (req, res) => {
     mentor_type,
     updated: true,
   };
-  const updated = await updateData("mentees", updates, "id", userId);
+  const updated = await updateData("mentees", updates, "userId", userId);
   if (updated === false) {
     return res.json({
       success: false,
@@ -150,6 +183,73 @@ const Login = async (req, res) => {
   } catch (error) {
     console.log(error);
     return res.status(500).json({ error: error.message });
+  }
+};
+
+const sendPwdResetOTP = async (req, res) => {
+  const { email } = req.body;
+  try {
+    const data = await selectData("mentees", "email", email);
+    if (data.length > 0) {
+      const { otp, time } = generateOTP();
+      const otpMessage = `Dear ${data[0].firstName},<br/><br/>
+    We recently received a request to reset the password for your mentee account. To proceed with the password reset, please use the following One-Time Password (OTP):`;
+      const subject = "Password Reset OTP for Your WeHoldaHand Mentee Account";
+      const emailMessage = createMessage(otpMessage, subject, otp);
+
+      await sendEmail(email, subject, emailMessage);
+      await insertData("otptable", {
+        otp: otp,
+        userId: data[0].userId,
+        timestamp: time,
+      });
+
+      return res.status(200).json({
+        success: true,
+        message: "Your OTP has been sent to your email address",
+      });
+    } else {
+      return res.status(404).json({ message: "Email does not exist" });
+    }
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+const verifyPwdOTP = async (req, res) => {
+  const { otp } = req.body;
+  const data = await selectData("otptable", "otp", otp);
+  if (data.length > 0) {
+    const storedTimestamp = data[0].timestamp;
+    if (verifyOTP(storedTimestamp)) {
+      return res.status(200).json({
+        success: true,
+        userId: data[0].userId,
+        message: "OTP is valid",
+      });
+    } else {
+      return res.json({ expired: true, message: "OTP expired" });
+    }
+  } else {
+    return res.status(404).json({ success: false, message: "OTP not found" });
+  }
+};
+
+const resetPwd = async (req, res) => {
+  const { password, confirm_password } = req.body;
+  const { userId } = req.params;
+  try {
+    if (password === confirm_password) {
+      const salt = await bcrypt.genSalt(16);
+      const hashed = await bcrypt.hash(password, salt);
+      const update = { password: hashed };
+      await updateData("mentees", update, "userId", userId);
+      return res.status(200).json({ message: "Password updated successfully" });
+    } else {
+      return res.status(400).json({ message: "Passwords do not match" });
+    }
+  } catch (error) {
+    console.log(error);
   }
 };
 
@@ -227,84 +327,18 @@ const updateMenteeProfile = async (req, res) => {
   }
 };
 
-const sendPwdResetLink = async (req, res) => {
-  const { email } = req.body;
-  try {
-    const getUser = await selectData("mentees", "email", email);
-    if (getUser.length == 1) {
-      const user = getUser[0];
-      const credentials = generateToken(user.id);
-      const redirectURL = `${process.env.FRONTEND_URL}/auth/mentee/${user.id}/password_reset`;
-      const verificationLink = `${process.env.BASE_URL}/mentee/verifyPasswordResetLink${credentials.urlQuery}&redirect=${redirectURL}`;
-      const subject = "Password Reset";
-      const pwdMessage = `Dear ${user.fullName}, <br/>
-      We received a request to reset the password for your account. If you did not make this request, you can safely ignore this message. Your current password will remain unchanged.<br/>To reset your password, please click on the button below: <br/>This link will expire in 2 mins, so please use it as soon as possible. If the link has expired, you can request another password reset.<br />
-      `;
-
-      const mesageBody = createMessage(
-        pwdMessage,
-        verificationLink,
-        subject,
-        "Password reset"
-      );
-      await insertData("tokentable", { token: credentials.token });
-      await sendEmail(email, subject, mesageBody);
-
-      return res.status(200).json({
-        message: "The password reset link has been sent to your email",
-      });
-    } else {
-      return res.status(404).json({ message: "Email not recognised" });
-    }
-  } catch (error) {
-    console.log(error);
-  }
-};
-
-const verifyPwdLink = async (req, res) => {
-  const { userId, token, expirationTime, redirect } = req.query;
-  const errorUrl = `${process.env.FRONTEND_URL}/auth/mentee/${userId}/invalidpwdToken`;
-  try {
-    const isTokenValid = await verifyToken(token, expirationTime);
-    if (isTokenValid) {
-      res.redirect(redirect);
-    } else {
-      res.redirect(errorUrl);
-    }
-  } catch (error) {
-    console.log(error);
-  }
-};
-
-const updatePassword = async (req, res) => {
-  const { password, confirm_password } = req.body;
-  const { userId } = req.params;
-  try {
-    if (password === confirm_password) {
-      const salt = await bcrypt.genSalt(16);
-      const hashed = await bcrypt.hash(password, salt);
-      const update = { password: hashed };
-      await updateData("mentees", update, "id", userId);
-      return res.status(200).json({ message: "Password updated successfully" });
-    } else {
-      return res.status(400).json({ message: "Passwords do not match" });
-    }
-  } catch (error) {
-    console.log(error);
-  }
-};
-
 module.exports = {
   getAllMentees,
   getMenteeDetails,
   Register,
-  verifyEmail,
+  verifyEmailOTP,
+  resendEmailOTP,
   updateApplication,
   Login,
   Upload,
   updateDetails,
   updateMenteeProfile,
-  sendPwdResetLink,
-  verifyPwdLink,
-  updatePassword,
+  sendPwdResetOTP,
+  verifyPwdOTP,
+  resetPwd,
 };

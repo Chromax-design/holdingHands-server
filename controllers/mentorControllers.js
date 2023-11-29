@@ -1,4 +1,6 @@
 const bcrypt = require("bcryptjs");
+const { v4: uuidv4 } = require("uuid");
+
 const {
   insertData,
   selectData,
@@ -15,9 +17,9 @@ cloudinary.config({
 });
 
 const {
-  generateToken,
+  verifyOTP,
+  generateOTP,
   createMessage,
-  verifyToken,
   genAccessToken,
 } = require("../utils/utilities");
 const sendEmail = require("../utils/mailer");
@@ -36,7 +38,7 @@ const getMentorProfile = async (req, res) => {
 const searchMentor = async (req, res) => {
   const { industry } = req.params;
   try {
-    const data = await selectData('mentors', "industry", industry);
+    const data = await selectData("mentors", "industry", industry);
     return res.status(200).json({ mentors: [...data] });
   } catch (error) {
     console.log(error);
@@ -49,12 +51,12 @@ const Register = async (req, res) => {
   const salt = await bcrypt.genSalt(saltRounds);
   const hashedPassword = await bcrypt.hash(password, salt);
   const user = {
+    userId: uuidv4(),
     firstName,
     initials,
     email,
     telNumber,
     password: hashedPassword,
-    verified: false,
   };
 
   const existingUsers = await selectData("mentors", "email", email);
@@ -64,41 +66,113 @@ const Register = async (req, res) => {
       .json({ success: false, message: "User already exists" });
   }
 
-  const { insertId } = await insertData("mentors", user);
-  const token = generateToken(insertId);
-  const redirectURL = `${process.env.FRONTEND_URL}/mentor/${insertId}/application`;
-  const verificationMessage = `To get started and enjoy all the benefits of our platform, we need to verify your email address. <br/>Please click the button below to verify your email address<br/>
-  Once you've verified your email, you'll have full access to your account and can start using our services immediately.`;
-  const verificationLink = `${process.env.BASE_URL}/mentor/verifyEmail${token.urlQuery}&redirect=${redirectURL}`;
-  const subject = "Verify your email";
-  const emailMessage = createMessage(
-    verificationMessage,
-    verificationLink,
-    subject,
-    "Verify your email"
-  );
+  await insertData("mentors", user);
+  const { otp, time } = generateOTP();
+  const otpMessage = `Dear ${user.firstName},<br/><br/>
+  We hope this message finds you well. As part of our commitment to ensuring the security of your account with weHoldaHand, we are implementing an additional layer of protection through OTP (One-Time Password) verification. Below is your code and it expires in 5mins`;
+  const subject = "OTP Verification for your weHoldaHand mentor Account";
+  const emailMessage = createMessage(otpMessage, subject, otp);
 
   await sendEmail(email, subject, emailMessage);
-  await insertData("tokentable", { token: token.token });
+  await insertData("otptable", {
+    otp: otp,
+    userId: user.userId,
+    timestamp: time,
+  });
 
   return res.status(200).json({
-    message: "An email verification link has been sent to your email address",
+    success: true,
+    message: "Your OTP has been sent to your email address",
   });
 };
 
-const verifyEmail = async (req, res) => {
-  const { userId, token, expirationTime, redirect } = req.query;
-  const invalidTokenURL = `${process.env.FRONTEND_URL}/auth/mentor/${userId}/invalidToken`;
-  try {
-    const isTokenValid = await verifyToken(token, expirationTime);
-    if (isTokenValid) {
-      res.redirect(redirect);
+const verifyEmailOTP = async (req, res) => {
+  const { otp } = req.body;
+  const data = await selectData("otptable", "otp", otp);
+  if (data.length > 0) {
+    const storedTimestamp = data[0].timestamp;
+    if (verifyOTP(storedTimestamp)) {
+      return res.status(200).json({
+        success: true,
+        userId: data[0].userId,
+        message: "Registration successful",
+      });
     } else {
-      await deleteData("tokentable", "token", token);
-      res.redirect(invalidTokenURL);
+      return res.status(401).json({ expired: true, message: "OTP expired" });
     }
-  } catch (error) {
-    console.log(error);
+  } else {
+    return res.status(404).json({ success: false, message: "OTP not found" });
+  }
+};
+
+const resendEmailOTP = async (req, res) => {
+  const { email } = req.body;
+  const data = await selectData("mentors", "email", email);
+  if (data.length > 0) {
+    const { otp, time } = generateOTP();
+    const otpMessage = `Dear ${data[0].firstName},<br/><br/>
+    We hope this message finds you well. As part of our commitment to ensuring the security of your account with weHoldaHand, we are implementing an additional layer of protection through OTP (One-Time Password) verification. Below is your code and it expires in 5mins`;
+    const subject = "OTP Verification for your weHoldaHand mentor Account";
+    const emailMessage = createMessage(otpMessage, subject, otp);
+
+    await sendEmail(email, subject, emailMessage);
+    await insertData("otptable", {
+      otp: otp,
+      userId: data.userId,
+      timestamp: time,
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: "Your OTP has been sent to your email address",
+    });
+  } else {
+    return res.status(404).json({ message: "Email does not exist" });
+  }
+};
+
+const sendPwdResetOTP = async (req, res) => {
+  const { email } = req.body;
+  const data = await selectData("mentors", "email", email);
+  if (data.length > 0) {
+    const { otp, time } = generateOTP();
+    const otpMessage = `Dear ${data[0].firstName},<br/><br/>
+    We recently received a request to reset the password for your mentee account. To proceed with the password reset, please use the following One-Time Password (OTP):`;
+    const subject = "Password Reset OTP for Your WeHoldaHand Mentor Account";
+    const emailMessage = createMessage(otpMessage, subject, otp);
+
+    await sendEmail(email, subject, emailMessage);
+    await insertData("otptable", {
+      otp: otp,
+      userId: data.userId,
+      timestamp: time,
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: "Your OTP has been sent to your email address",
+    });
+  } else {
+    return res.status(404).json({ message: "Email does not exist" });
+  }
+};
+
+const verifyPwdOTP = async (req, res) => {
+  const { otp } = req.body;
+  const data = await selectData("otptable", "otp", otp);
+  if (data.length > 0) {
+    const storedTimestamp = data[0].timestamp;
+    if (verifyOTP(storedTimestamp)) {
+      return res.status(200).json({
+        success: true,
+        userId: data[0].userId,
+        message: "OTP is valid",
+      });
+    } else {
+      return res.json({ expired: true, message: "OTP expired" });
+    }
+  } else {
+    return res.status(404).json({ success: false, message: "OTP not found" });
   }
 };
 
@@ -255,90 +329,8 @@ const updateMentorProfile = async (req, res) => {
   }
 };
 
-const sendPwdResetLink = async (req, res) => {
-  const { email } = req.body;
-  try {
-    const getUser = await selectData("mentors", "email", email);
-    if (getUser.length == 1) {
-      const user = getUser[0];
-      const credentials = generateToken(user.id);
-      const redirectURL = `${process.env.FRONTEND_URL}/auth/mentor/${user.id}/password_reset`;
-      const verificationLink = `${process.env.BASE_URL}/mentor/verifyPasswordResetLink${credentials.urlQuery}&redirect=${redirectURL}`;
-      const subject = "Password Reset";
-      const pwdMessage = `Dear ${user.fullName}, <br/><br/>
-      We received a request to reset the password for your account. If you did not make this request, you can safely ignore this message. Your current password will remain unchanged.<br/>To reset your password, please click on the button below: <br/>This link will expire in 2 mins, so please use it as soon as possible. If the link has expired, you can request another password reset.<br />
-      `;
 
-      const mesageBody = createMessage(
-        pwdMessage,
-        verificationLink,
-        subject,
-        "Password reset"
-      );
-      await insertData("tokentable", { token: credentials.token });
-      await sendEmail(email, subject, mesageBody);
-
-      return res.status(200).json({
-        message: "The password reset link has been sent to your email",
-      });
-    } else {
-      return res.status(404).json({ message: "Email not recognised" });
-    }
-  } catch (error) {
-    console.log(error);
-  }
-};
-
-const sendResetToken = async (req, res) => {
-  const { email } = req.body;
-  try {
-    const getUser = await selectData("mentors", "email", email);
-    if (getUser.length == 1) {
-      const user = getUser[0];
-      const credentials = generateToken(user.id);
-      const redirectURL = `${process.env.FRONTEND_URL}/mentor/${user.id}/application`;
-      const verificationLink = `${process.env.BASE_URL}/mentor/verifyEmail${credentials.urlQuery}&redirect=${redirectURL}`;
-      const verificationMessage = `To get started and enjoy all the benefits of our platform, we need to verify your email address. <br/>Please click the button below to verify your email address<br/>
-  Once you've verified your email, you'll have full access to your account and can start using our services immediately.`;
-
-      const subject = "Verify your email";
-      const emailMessage = createMessage(
-        verificationMessage,
-        verificationLink,
-        subject,
-        "Verify your email"
-      );
-      await insertData("tokentable", { token: credentials.token });
-      await sendEmail(email, subject, emailMessage);
-
-      return res.status(200).json({
-        message:
-          "An email verification link has been sent to your email address",
-      });
-    } else {
-      return res.status(404).json({ message: "Email not recognised" });
-    }
-  } catch (error) {
-    console.log(error);
-  }
-};
-
-const verifyPwdLink = async (req, res) => {
-  const { userId, token, expirationTime, redirect } = req.query;
-  const errorUrl = `${process.env.FRONTEND_URL}/auth/mentor/${userId}/invalidpwdToken`;
-  try {
-    const isTokenValid = await verifyToken(token, expirationTime);
-    if (isTokenValid) {
-      res.redirect(redirect);
-    } else {
-      res.redirect(errorUrl);
-    }
-  } catch (error) {
-    console.log(error);
-  }
-};
-
-const updatePassword = async (req, res) => {
+const resetPwd = async (req, res) => {
   const { password, confirm_password } = req.body;
   const { userId } = req.params;
   try {
@@ -361,14 +353,14 @@ module.exports = {
   getMentorProfile,
   searchMentor,
   Register,
-  verifyEmail,
+  verifyEmailOTP,
+  resendEmailOTP,
+  sendPwdResetOTP,
+  verifyPwdOTP,
+  resetPwd,
   updateApplication,
   Login,
   Upload,
   updateDetails,
   updateMentorProfile,
-  sendPwdResetLink,
-  sendResetToken,
-  verifyPwdLink,
-  updatePassword,
 };

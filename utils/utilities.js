@@ -2,13 +2,24 @@ const crypto = require("crypto");
 const jwt = require("jsonwebtoken");
 const { selectData } = require("./sqlHandlers");
 
-const generateToken = (userId) => {
-  const token = crypto.randomBytes(16).toString("hex");
-  const time = Date.now() + 120 * 1000;
-  const urlQuery = `?userId=${userId}&token=${token}&expirationTime=${time}`;
+const generateOTP = () => {
+  const otpRandom = Math.floor(100000 + Math.random() * 900000);
+  const otp = otpRandom.toString();
+  const time = new Date();
 
-  return { token, urlQuery };
+  return { otp, time };
 };
+
+const verifyOTP = (storedTimestamp)=> {
+  const currentTime = new Date();
+  const timeDifference = currentTime - storedTimestamp;
+  const isExpired = timeDifference > 5 * 60 * 1000; // 5 minutes in milliseconds
+  if (isExpired) {
+    return false
+  }else{
+    return true
+  }
+}
 
 const genAccessToken = (userId) => {
   const accessToken = jwt.sign({ userId }, process.env.PRIVATE_KEY, {
@@ -17,21 +28,7 @@ const genAccessToken = (userId) => {
   return accessToken;
 };
 
-const verifyToken = async (token, expirationTime) => {
-  const currentTime = Date.now();
-  try {
-    const checkToken = await selectData("tokentable", "token", token);
-    if (checkToken.length > 0) {
-      return currentTime <= expirationTime;
-    } else {
-      return false;
-    }
-  } catch (error) {
-    console.log(error);
-  }
-};
-
-const createMessage = (messsage, link, subject, linkTitle) => {
+const createMessage = (messsage, subject, otp) => {
   return `<!doctype html>
         <html>
           <head>
@@ -49,8 +46,7 @@ const createMessage = (messsage, link, subject, linkTitle) => {
         table.body ul,
         table.body ol,
         table.body td,
-        table.body span,
-        table.body a {
+        table.body span {
             font-size: 16px !important;
           }
         
@@ -76,16 +72,6 @@ const createMessage = (messsage, link, subject, linkTitle) => {
         
           table.body .btn table {
             width: 100% !important;
-          }
-        
-          table.body .btn a {
-            width: 100% !important;
-          }
-        
-          table.body .img-responsive {
-            height: auto !important;
-            max-width: 100% !important;
-            width: auto !important;
           }
         }
         @media all {
@@ -119,15 +105,6 @@ const createMessage = (messsage, link, subject, linkTitle) => {
             font-weight: inherit;
             line-height: inherit;
           }
-        
-          .btn-primary table td:hover {
-            background-color: #34495e !important;
-          }
-        
-          .btn-primary a:hover {
-            background-color: #34495e !important;
-            border-color: #34495e !important;
-          }
         }
         </style>
           </head>
@@ -148,16 +125,15 @@ const createMessage = (messsage, link, subject, linkTitle) => {
                           <table role="presentation" border="0" cellpadding="0" cellspacing="0" style="border-collapse: separate; mso-table-lspace: 0pt; mso-table-rspace: 0pt; width: 100%;" width="100%">
                             <tr>
                               <td style="font-family: sans-serif; font-size: 14px; vertical-align: top;" valign="top">
-                                <p style="font-family: sans-serif; font-size: 14px; font-weight: normal; margin: 0; margin-bottom: 15px;">Hi there,</p>
                                 <p style="font-family: sans-serif; font-size: 14px; font-weight: normal; margin: 0; margin-bottom: 15px;">${messsage}</p>
                                 <table role="presentation" border="0" cellpadding="0" cellspacing="0" class="btn btn-primary" style="border-collapse: separate; mso-table-lspace: 0pt; mso-table-rspace: 0pt; box-sizing: border-box; width: 100%;" width="100%">
                                   <tbody>
                                     <tr>
-                                      <td align="left" style="font-family: sans-serif; font-size: 14px; vertical-align: top; padding-bottom: 15px;" valign="top">
+                                      <td align="left" style="font-size: 14px; vertical-align: top; padding-bottom: 15px;" valign="top">
                                         <table role="presentation" border="0" cellpadding="0" cellspacing="0" style="border-collapse: separate; mso-table-lspace: 0pt; mso-table-rspace: 0pt; width: auto;">
                                           <tbody>
                                             <tr>
-                                              <td style="font-family: sans-serif; font-size: 14px; vertical-align: top; border-radius: 5px; text-align: center; background-color: #3498db;" valign="top" align="center" bgcolor="#3498db"> <a href=${link} style="border: solid 1px #3498db; border-radius: 5px; box-sizing: border-box; cursor: pointer; display: inline-block; font-size: 14px; font-weight: bold; margin: 0; padding: 12px 25px; text-decoration: none; text-transform: capitalize; background-color: #3498db; border-color: #3498db; color: #ffffff;">${linkTitle}</a> </td>
+                                              <td style="font-family: monospace; font-size: 14px; vertical-align: top; border-radius: 5px; text-align: center;" valign="top" align="center"> <p style="font-family: monospace;font-size: 14px; font-weight: bold; margin: 0;">OTP: ${otp}</p> </td>
                                             </tr>
                                           </tbody>
                                         </table>
@@ -197,8 +173,8 @@ const createMessage = (messsage, link, subject, linkTitle) => {
 };
 
 module.exports = {
-  generateToken,
+  generateOTP,
   genAccessToken,
   createMessage,
-  verifyToken,
+  verifyOTP,
 };
