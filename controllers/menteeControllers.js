@@ -36,43 +36,47 @@ const getMenteeDetails = async (req, res) => {
 
 const Register = async (req, res) => {
   const { firstName, initials, email, password, telNumber } = req.body;
-  const saltRounds = 16;
-  const salt = await bcrypt.genSalt(saltRounds);
-  const hashedPassword = await bcrypt.hash(password, salt);
-  const user = {
-    userId: uuidv4(),
-    firstName,
-    initials,
-    email,
-    telNumber,
-    password: hashedPassword,
-  };
+  try {
+    const saltRounds = 16;
+    const salt = await bcrypt.genSalt(saltRounds);
+    const hashedPassword = await bcrypt.hash(password, salt);
+    const user = {
+      userId: uuidv4(),
+      firstName,
+      initials,
+      email,
+      telNumber,
+      password: hashedPassword,
+    };
 
-  const existingUsers = await selectData("mentees", "email", email);
-  if (existingUsers.length > 0) {
-    return res
-      .status(409)
-      .json({ success: false, message: "User already exists" });
-  }
+    const existingUsers = await selectData("mentees", "email", email);
+    if (existingUsers.length > 0) {
+      return res
+        .status(409)
+        .json({ success: false, message: "User already exists" });
+    }
 
-  await insertData("mentees", user);
-  const { otp, time } = generateOTP();
-  const otpMessage = `Dear ${user.firstName},<br/><br/>
+    await insertData("mentees", user);
+    const { otp, time } = generateOTP();
+    const otpMessage = `Dear ${user.firstName},<br/><br/>
   We hope this message finds you well. As part of our commitment to ensuring the security of your account with weHoldaHand, we are implementing an additional layer of protection through OTP (One-Time Password) verification. Below is your code and it expires in 5mins`;
-  const subject = "OTP Verification for your weHoldaHand mentee Account";
-  const emailMessage = createMessage(otpMessage, subject, otp);
+    const subject = "OTP Verification for your weHoldaHand mentee Account";
+    const emailMessage = createMessage(otpMessage, subject, otp);
 
-  await sendEmail(email, subject, emailMessage);
-  await insertData("otptable", {
-    otp: otp,
-    userId: user.userId,
-    timestamp: time,
-  });
+    await sendEmail(email, subject, emailMessage);
+    await insertData("otptable", {
+      otp: otp,
+      userId: user.userId,
+      timestamp: time,
+    });
 
-  return res.status(200).json({
-    success: true,
-    message: "Your OTP has been sent to your email address",
-  });
+    return res.status(200).json({
+      success: true,
+      message: "Your OTP has been sent to your email address",
+    });
+  } catch (error) {
+    console.log(error)
+  }
 };
 
 const verifyEmailOTP = async (req, res) => {
