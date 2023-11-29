@@ -201,7 +201,11 @@ const loginWithGoogle = async (req, res) => {
         password: "",
       };
       await insertData("mentees", userData);
-      return res.json({ message: "Registration was successful", ...userData });
+      const newData = await selectData("mentees", "email", email);
+      return res.json({
+        message: "Registration was successful",
+        ...newData[0],
+      });
     }
   } catch (error) {
     console.log(error);
