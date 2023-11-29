@@ -1,12 +1,7 @@
 const bcrypt = require("bcryptjs");
 const { v4: uuidv4 } = require("uuid");
 
-const {
-  insertData,
-  selectData,
-  deleteData,
-  updateData,
-} = require("../utils/sqlHandlers");
+const { insertData, selectData, updateData } = require("../utils/sqlHandlers");
 
 const cloudinary = require("cloudinary").v2;
 
@@ -75,7 +70,7 @@ const Register = async (req, res) => {
       message: "Your OTP has been sent to your email address",
     });
   } catch (error) {
-    console.log(error)
+    console.log(error);
   }
 };
 
@@ -187,6 +182,29 @@ const Login = async (req, res) => {
   } catch (error) {
     console.log(error);
     return res.status(500).json({ error: error.message });
+  }
+};
+
+const loginWithGoogle = async (req, res) => {
+  const { firstName, email } = req.body;
+  try {
+    const data = await selectData("mentees", "email", email);
+    if (data.length > 0) {
+      return res
+        .status(200)
+        .json({ message: "you logged in successfully", ...data[0] });
+    } else {
+      const userData = {
+        firstName,
+        email,
+        userId: uuidv4(),
+        password: "",
+      };
+      await insertData("mentees", userData);
+      return res.json({ message: "Registration was successful", ...userData });
+    }
+  } catch (error) {
+    console.log(error);
   }
 };
 
@@ -339,6 +357,7 @@ module.exports = {
   resendEmailOTP,
   updateApplication,
   Login,
+  loginWithGoogle,
   Upload,
   updateDetails,
   updateMenteeProfile,

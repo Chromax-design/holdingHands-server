@@ -5,6 +5,7 @@ const {
   resendEmailOTP,
   updateApplication,
   Login,
+  loginWithGoogle,
   sendPwdResetOTP,
   verifyPwdOTP,
   resetPwd,
@@ -27,13 +28,14 @@ menteeRouter.get("/:userId", getMenteeDetails);
 menteeRouter.post("/register", Register);
 menteeRouter.post("/verifyEmail", verifyEmailOTP);
 menteeRouter.post("/resendEmailOTP", resendEmailOTP);
+menteeRouter.post("/login", Login);
+menteeRouter.post("/loginWithGoogle", loginWithGoogle)
 
 menteeRouter.post("/sendpwdResetOTP", sendPwdResetOTP);
 menteeRouter.post("/verifyPwdOTP", verifyPwdOTP);
 menteeRouter.put("/resetPwd/:userId", resetPwd);
 
 menteeRouter.put("/application/:userId", updateApplication);
-menteeRouter.post("/login", Login);
 menteeRouter.put("/upload/:userId", upload.single("file"), Upload);
 menteeRouter.put("/userdetails/:userId", updateDetails);
 menteeRouter.put("/menteeprofile/:userId", updateMenteeProfile);
