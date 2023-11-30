@@ -94,6 +94,7 @@ const StripeWebhook = (req, res) => {
         clientId: userId,
       };
       console.log(dbObject);
+      console.log(session)
       // Then define and call a function to handle the event payment_intent.succeeded
       break;
     // ... handle other event types
