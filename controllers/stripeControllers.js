@@ -32,7 +32,7 @@ const StripeCheckout = async (req, res) => {
       mentor_Id: product.mentorId,
       mentee_Id: product.menteeId,
     };
-    await insertData("subscription", checkObject);
+    // await insertData("subscription", checkObject);
 
     console.log(checkObject);
     res.json({ id: session.id });
