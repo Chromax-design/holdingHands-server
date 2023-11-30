@@ -1,13 +1,10 @@
-// const express = require("express");
-// const {
-//   CheckoutSession
-// } = require("../controllers/stripeControllers");
-// const stripeRouter = express.Router();
+const express = require('express');
+const { StripeCheckout, StripeWebhook } = require('../controllers/stripeControllers');
+const stripeRouter = express.Router()
 
-// stripeRouter.post("/create-checkout-session", CheckoutSession);
-// // stripeRouter.post(
-// //   "/webhook",
-// //   bodyParser.raw({ type: "application/json" }),
-// //   webHook
-// // );
-// module.exports = stripeRouter;
+
+stripeRouter.post("/create-checkout-session", StripeCheckout)
+stripeRouter.post("/webhook", StripeWebhook )
+
+
+module.exports = {stripeRouter}
