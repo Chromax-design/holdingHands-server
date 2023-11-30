@@ -23,14 +23,14 @@ const StripeCheckout = async (req, res) => {
     cancel_url: `${process.env.FRONTEND_URL}/stripe/cancel`,
   });
 
-  const checkObject = {
-    payment_Id: session.id,
-    amount: product.price,
-    mentor_Id: product.mentorId,
-    mentee_Id: product.menteeId,
-  };
+//   const checkObject = {
+//     payment_Id: session.id,
+//     amount: product.price,
+//     mentor_Id: product.mentorId,
+//     mentee_Id: product.menteeId,
+//   };
   
-  console.log(checkObject)
+  console.log(session)
   res.json({ id: session.id });
 };
 
