@@ -9,10 +9,10 @@ const pool = mysql.createPool({
 });
 
 // const pool = mysql.createPool({
-//   host: 'localhost',
-//   user: 'root',
-//   password: '',
-//   database: 'holdinghands',
+//   host: "localhost",
+//   user: "root",
+//   password: "",
+//   database: "holdinghands",
 //   waitForConnections: true,
 //   connectionLimit: 10,
 // });
@@ -30,7 +30,7 @@ const insertData = async (tableName, data) => {
 const selectData = async (tableName, identifier, value) => {
   let sql = `SELECT * FROM ${tableName}`;
   if (identifier && value) {
-   sql = `SELECT * FROM ${tableName} WHERE ${identifier} = ?`;
+    sql = `SELECT * FROM ${tableName} WHERE ${identifier} = ?`;
   }
   const [rows] = await pool.query(sql, [value], (err) => {
     if (err) {
@@ -49,20 +49,33 @@ const deleteData = async (tableName, identifier, value) => {
   });
 };
 
-const updateData = async(tableName, updates, identifier, value)=>{
-  const sql = `UPDATE ${tableName} SET ? WHERE ${identifier} = ?`
-  await pool.query(sql, [updates, value], (err)=>{
+const updateData = async (tableName, updates, identifier, value) => {
+  const sql = `UPDATE ${tableName} SET ? WHERE ${identifier} = ?`;
+  await pool.query(sql, [updates, value], (err) => {
     if (err) {
       console.error(err);
-      return false
+      return false;
     }
-    return true
-  })
-}
+    return true;
+  });
+};
+
+const searchData = async (tableName, identifier, wildcard) => {
+  try {
+    const sql = `SELECT * FROM ${tableName} WHERE ${identifier} LIKE ?`;
+    const [rows] = await pool.query(sql, [`%${wildcard}%`]);
+    return rows;
+  } catch (err) {
+    console.error(err);
+    return false;
+  }
+};
+
 
 module.exports = {
   insertData,
   selectData,
   deleteData,
-  updateData
+  updateData,
+  searchData,
 };

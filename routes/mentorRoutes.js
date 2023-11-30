@@ -14,6 +14,7 @@ const {
   getAllMentors,
   getMentorProfile,
   searchMentor,
+  handleSearch,
 } = require("../controllers/mentorControllers");
 const multer = require("multer");
 const mentorRouter = express.Router();
@@ -22,8 +23,9 @@ const storage = multer.memoryStorage();
 const upload = multer({ storage });
 
 mentorRouter.get("/", getAllMentors);
-mentorRouter.get("/:userId", getMentorProfile)
+mentorRouter.get("/:userId", getMentorProfile);
 mentorRouter.get("/search/:industry", searchMentor);
+mentorRouter.post("/search", handleSearch);
 
 mentorRouter.post("/register", Register);
 mentorRouter.post("/verifyEmail", verifyEmailOTP);

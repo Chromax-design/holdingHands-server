@@ -4,7 +4,7 @@ const { v4: uuidv4 } = require("uuid");
 const {
   insertData,
   selectData,
-  deleteData,
+  searchData,
   updateData,
 } = require("../utils/sqlHandlers");
 
@@ -45,6 +45,23 @@ const searchMentor = async (req, res) => {
   }
 };
 
+const handleSearch = async (req, res) => {
+  const { search } = req.body;
+  try {
+    const data = await searchData("mentors", "industry", search);
+    if (data.length == 0) {
+      return res
+        .status(404)
+        .json({ message: "No mentor found for this category" });
+    } else {
+      return res.json({ mentors: data });
+    }
+  } catch (error) {
+    console.log(error);
+  }
+  res.json({ message: "sent" });
+};
+
 const Register = async (req, res) => {
   const { firstName, initials, email, password, telNumber } = req.body;
   const saltRounds = 16;
@@ -73,12 +90,10 @@ const Register = async (req, res) => {
   const subject = "OTP Verification for your weHoldaHand mentor Account";
   const emailMessage = createMessage(otpMessage, subject, otp);
 
-  await sendEmail(email, subject, emailMessage);
-  await insertData("otptable", {
-    otp: otp,
-    userId: user.userId,
-    timestamp: time,
-  });
+  await Promise.all([
+    sendEmail(email, subject, emailMessage),
+    insertData("otptable", { otp, userId: user.userId, timestamp: time }),
+  ]);
 
   return res.status(200).json({
     success: true,
@@ -98,7 +113,7 @@ const verifyEmailOTP = async (req, res) => {
         message: "Registration successful",
       });
     } else {
-      return res.status(401).json({ expired: true, message: "OTP expired" });
+      return res.status.json({ expired: true, message: "OTP expired" });
     }
   } else {
     return res.status(404).json({ success: false, message: "OTP not found" });
@@ -114,13 +129,15 @@ const resendEmailOTP = async (req, res) => {
     We hope this message finds you well. As part of our commitment to ensuring the security of your account with weHoldaHand, we are implementing an additional layer of protection through OTP (One-Time Password) verification. Below is your code and it expires in 5mins`;
     const subject = "OTP Verification for your weHoldaHand mentor Account";
     const emailMessage = createMessage(otpMessage, subject, otp);
-
-    await sendEmail(email, subject, emailMessage);
-    await insertData("otptable", {
-      otp: otp,
-      userId: data.userId,
-      timestamp: time,
-    });
+    console.log(data);
+    Promise.all([
+      sendEmail(email, subject, emailMessage),
+      insertData("otptable", {
+        otp: otp,
+        userId: data.userId,
+        timestamp: time,
+      }),
+    ]);
 
     return res.status(200).json({
       success: true,
@@ -134,19 +151,21 @@ const resendEmailOTP = async (req, res) => {
 const sendPwdResetOTP = async (req, res) => {
   const { email } = req.body;
   const data = await selectData("mentors", "email", email);
-  if (data.length > 0) {
+  if (data.length == 1) {
     const { otp, time } = generateOTP();
     const otpMessage = `Dear ${data[0].firstName},<br/><br/>
     We recently received a request to reset the password for your mentee account. To proceed with the password reset, please use the following One-Time Password (OTP):`;
     const subject = "Password Reset OTP for Your WeHoldaHand Mentor Account";
     const emailMessage = createMessage(otpMessage, subject, otp);
 
-    await sendEmail(email, subject, emailMessage);
-    await insertData("otptable", {
-      otp: otp,
-      userId: data.userId,
-      timestamp: time,
-    });
+    await Promise.all([
+      sendEmail(email, subject, emailMessage),
+      insertData("otptable", {
+        otp: otp,
+        userId: data[0].userId,
+        timestamp: time,
+      }),
+    ]);
 
     return res.status(200).json({
       success: true,
@@ -198,7 +217,7 @@ const updateApplication = async (req, res) => {
     updated: true,
   };
   try {
-    const updated = await updateData("mentors", updates, "id", userId);
+    const updated = await updateData("mentors", updates, "userId", userId);
     if (updated === false) {
       return res.json({
         success: false,
@@ -221,7 +240,7 @@ const Login = async (req, res) => {
     const checkUser = await selectData("mentors", "email", email);
     if (checkUser.length === 1) {
       const user = checkUser[0];
-      const verifyPassword = await bcrypt.compare(password, user.password);
+      const verifyPassword = bcrypt.compareSync(password, user.password);
       if (verifyPassword) {
         delete user.password;
         const accessToken = genAccessToken(user.id);
@@ -267,6 +286,7 @@ const Upload = async (req, res) => {
     })
     .end(req.file.buffer);
 };
+
 
 const updateDetails = async (req, res) => {
   const {
@@ -319,7 +339,7 @@ const updateMentorProfile = async (req, res) => {
     updated: true,
   };
   try {
-    await updateData("mentors", updates, "id", userId);
+    await updateData("mentors", updates, "userId", userId);
     res.json({
       message: "Application submitted successfully",
       update: updates,
@@ -328,7 +348,6 @@ const updateMentorProfile = async (req, res) => {
     console.log(error);
   }
 };
-
 
 const resetPwd = async (req, res) => {
   const { password, confirm_password } = req.body;
@@ -352,6 +371,7 @@ module.exports = {
   getAllMentors,
   getMentorProfile,
   searchMentor,
+  handleSearch,
   Register,
   verifyEmailOTP,
   resendEmailOTP,
