@@ -9,7 +9,7 @@ const StripeCheckout = async (req, res) => {
     line_items: [
       {
         price_data: {
-          currency: "inr",
+          currency: "usd",
           product_data: {
             name: product.name,
           },
@@ -22,7 +22,15 @@ const StripeCheckout = async (req, res) => {
     success_url: `${process.env.FRONTEND_URL}/stripe/success`,
     cancel_url: `${process.env.FRONTEND_URL}/stripe/cancel`,
   });
-  console.log(session);
+
+  const checkObject = {
+    payment_Id: session.id,
+    amount: product.price,
+    mentor_Id: product.mentorId,
+    mentee_Id: product.menteeId,
+  };
+  
+  console.log(checkObject)
   res.json({ id: session.id });
 };
 
