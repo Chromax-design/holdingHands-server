@@ -24,7 +24,7 @@ const StripeCheckout = async (req, res) => {
       mode: "payment",
       success_url: `${process.env.FRONTEND_URL}/stripe/success`,
       cancel_url: `${process.env.FRONTEND_URL}/stripe/cancel`,
-      client_reference_id: product.menteeId
+      client_reference_id: product.menteeId,
     });
 
     const checkObject = {
@@ -45,6 +45,13 @@ const StripeWebhook = (req, res) => {
   const event = req.body;
 
   switch (event.type) {
+    case "checkout.session.completed":
+      const session = event.data.object;
+      const paymentIntentId = session.payment_intent;
+      const amountPaid = session.amount_total / 100; // Convert from cents to currency
+      const userId = session.client_reference_id;
+      console.log(userId);
+
     case "payment_intent.amount_capturable_updated":
       const paymentIntentAmountCapturableUpdated = event.data.object;
       console.log(paymentIntentAmountCapturableUpdated);
@@ -87,7 +94,7 @@ const StripeWebhook = (req, res) => {
         paymentId: paymentIntentSucceeded.id,
         paymentStatus: paymentIntentSucceeded.status,
         amountPaid: paymentIntentSucceeded.amount,
-        clientId: paymentIntentSucceeded.client_reference_id
+        clientId: paymentIntentSucceeded.client_reference_id,
       };
       console.log(dbObject);
       // Then define and call a function to handle the event payment_intent.succeeded
