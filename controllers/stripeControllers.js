@@ -47,7 +47,7 @@ const StripeWebhook = (req, res) => {
   const paymentIntentId = session.payment_intent;
   const amountPaid = session.amount_total / 100; // Convert from cents to currency
   const userId = session.client_reference_id;
-  console.log(session);
+  console.log(event);
 
   switch (event.type) {
     case "payment_intent.amount_capturable_updated":
