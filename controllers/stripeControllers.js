@@ -43,13 +43,14 @@ const StripeCheckout = async (req, res) => {
 
 const StripeWebhook = (req, res) => {
   const event = req.body;
-  const session = event.data.object;
-  const paymentIntentId = session.payment_intent;
-  const amountPaid = session.amount_total / 100; // Convert from cents to currency
-  const userId = session.client_reference_id;
-  console.log(event);
-
   switch (event.type) {
+    case "checkout.session.completed":
+      const session = event.data.object;
+      // const paymentIntentId = session.payment_intent;
+      // const amountPaid = session.amount_total / 100;
+      const userId = session.client_reference_id;
+      console.log(userId);
+      break;
     case "payment_intent.amount_capturable_updated":
       const paymentIntentAmountCapturableUpdated = event.data.object;
       console.log(paymentIntentAmountCapturableUpdated);
@@ -62,7 +63,7 @@ const StripeWebhook = (req, res) => {
       break;
     case "payment_intent.created":
       const paymentIntentCreated = event.data.object;
-      console.log(paymentIntentCreated);
+      console.log('created');
       // Then define and call a function to handle the event payment_intent.created
       break;
     case "payment_intent.partially_funded":
@@ -95,7 +96,7 @@ const StripeWebhook = (req, res) => {
         // clientId: userId,
       };
       console.log(dbObject);
-    //   console.log(session)
+      //   console.log(session)
       // Then define and call a function to handle the event payment_intent.succeeded
       break;
     // ... handle other event types
