@@ -47,6 +47,7 @@ const StripeWebhook = (req, res) => {
   const paymentIntentId = session.payment_intent;
   const amountPaid = session.amount_total / 100; // Convert from cents to currency
   const userId = session.client_reference_id;
+  console.log(session);
 
   switch (event.type) {
     case "payment_intent.amount_capturable_updated":
@@ -91,10 +92,10 @@ const StripeWebhook = (req, res) => {
         paymentId: paymentIntentSucceeded.id,
         paymentStatus: paymentIntentSucceeded.status,
         amountPaid: paymentIntentSucceeded.amount,
-        clientId: userId,
+        // clientId: userId,
       };
       console.log(dbObject);
-      console.log(session)
+    //   console.log(session)
       // Then define and call a function to handle the event payment_intent.succeeded
       break;
     // ... handle other event types
