@@ -49,6 +49,7 @@ const StripeWebhook = (req, res) => {
     switch (event.type) {
       case "checkout.session.completed":
         console.log(userId);
+        console.log(session)
         break;
       case "payment_intent.amount_capturable_updated":
         const paymentIntentAmountCapturableUpdated = event.data.object;
