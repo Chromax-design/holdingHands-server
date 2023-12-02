@@ -18,6 +18,7 @@ const {
   genAccessToken,
 } = require("../utils/utilities");
 const sendEmail = require("../utils/mailer");
+const { getPaymentDetails, getMentorSubscribed } = require("../utils/menteeSqlHandlers");
 
 const getAllMentees = async (req, res) => {
   const data = await selectData("mentees", "updated", true);
@@ -353,6 +354,28 @@ const updateMenteeProfile = async (req, res) => {
   }
 };
 
+const paymentDetails = async (req, res) => {
+  const { userId } = req.params;
+  try {
+    const data = await getPaymentDetails(userId);
+    // console.log(data);
+    return res.json({ message: "received", payment: data });
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+const getMyMentors = async(req, res)=>{
+  const {userId} = req.params;
+  try {
+    const data = await getMentorSubscribed(userId)
+    console.log(data)
+    return res.json({message: 'received', subscribed: data})
+  } catch (error) {
+    console.log(error)
+  }
+}
+
 module.exports = {
   getAllMentees,
   getMenteeDetails,
@@ -368,4 +391,6 @@ module.exports = {
   sendPwdResetOTP,
   verifyPwdOTP,
   resetPwd,
+  paymentDetails,
+  getMyMentors
 };

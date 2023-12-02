@@ -14,6 +14,8 @@ const {
   updateDetails,
   getMenteeDetails,
   getAllMentees,
+  paymentDetails,
+  getMyMentors,
 } = require("../controllers/menteeControllers");
 const multer = require("multer");
 
@@ -39,5 +41,8 @@ menteeRouter.put("/application/:userId", updateApplication);
 menteeRouter.put("/upload/:userId", upload.single("file"), Upload);
 menteeRouter.put("/userdetails/:userId", updateDetails);
 menteeRouter.put("/menteeprofile/:userId", updateMenteeProfile);
+
+menteeRouter.get("/payments/:userId", paymentDetails)
+menteeRouter.get("/myMentors/:userId", getMyMentors)
 
 module.exports = menteeRouter;
