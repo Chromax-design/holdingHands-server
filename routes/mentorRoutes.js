@@ -15,6 +15,8 @@ const {
   getMentorProfile,
   searchMentor,
   handleSearch,
+  getMyMentees,
+  paymentDetails,
 } = require("../controllers/mentorControllers");
 const multer = require("multer");
 const mentorRouter = express.Router();
@@ -40,5 +42,8 @@ mentorRouter.put("/application/:userId", updateApplication);
 mentorRouter.put("/upload/:userId", upload.single("file"), Upload);
 mentorRouter.put("/userdetails/:userId", updateDetails);
 mentorRouter.put("/mentorprofile/:userId", updateMentorProfile);
+
+mentorRouter.get("/payments/:userId", paymentDetails)
+mentorRouter.get("/myMentees/:userId", getMyMentees)
 
 module.exports = mentorRouter;
