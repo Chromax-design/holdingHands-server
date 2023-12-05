@@ -5,7 +5,7 @@ const http = require("http");
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
-    origin: "https://holdinghands.onrender.com",
+    origin: "https://weholdahand.netlify.app",
     // origin: "http://localhost:5173",
   },
 });

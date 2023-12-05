@@ -12,7 +12,7 @@ const payPalRouter = require("./routes/payPalRoutes");
 
 dotenv.config();
 const corsOptions = {
-  origin: "https://holdinghands.onrender.com",
+  origin: "https://weholdahand.netlify.app",
   // origin: "http://localhost:5173",
   methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
   credentials: true,
