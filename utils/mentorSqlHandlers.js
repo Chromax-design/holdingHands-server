@@ -28,8 +28,8 @@ const getPaymentDetails = async (value) => {
 };
 
 const getMenteeSubscribed = async (value) => {
-  const sql = `SELECT mentees.id, mentees.firstName, mentees.initials, mentees.image, mentees.mentor_type, mentees.bio FROM subscription JOIN mentees ON subscription.mentee_Id = mentees.id WHERE subscription.mentor_Id = ?`;
-  const [row] = await pool.query(sql, [value], (err) => {
+  const sql = `SELECT mentees.id, mentees.firstName, mentees.initials, mentees.image, mentees.mentor_type, mentees.bio FROM subscription JOIN mentees ON subscription.mentee_Id = mentees.id WHERE subscription.mentor_Id = ? AND expired = ?`;
+  const [row] = await pool.query(sql, [value, false], (err) => {
     if (err) {
       console.error(err);
     }

@@ -28,8 +28,8 @@ const getPaymentDetails = async (value) => {
 };
 
 const getMentorSubscribed = async (value) => {
-  const sql = `SELECT mentors.id, mentors.firstName, mentors.initials, mentors.image, mentors.industry, mentors.bio FROM subscription JOIN mentors ON subscription.mentor_Id = mentors.id WHERE subscription.mentee_Id = ?`;
-  const [row] = await pool.query(sql, [value], (err) => {
+  const sql = `SELECT mentors.id, mentors.firstName, mentors.initials, mentors.image, mentors.industry, mentors.bio FROM subscription JOIN mentors ON subscription.mentor_Id = mentors.id WHERE subscription.mentee_Id = ? AND subscription.expired = ?`;
+  const [row] = await pool.query(sql, [value, false], (err) => {
     if (err) {
       console.error(err);
     }
@@ -39,5 +39,5 @@ const getMentorSubscribed = async (value) => {
 
 module.exports = {
   getPaymentDetails,
-  getMentorSubscribed
+  getMentorSubscribed,
 };

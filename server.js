@@ -8,25 +8,25 @@ const chatRouter = require("./routes/chatRoutes");
 const messageRouter = require("./routes/messageRoutes");
 const { app, server } = require("./socket/socket");
 const { stripeRouter } = require("./routes/stripeRoutes");
+const payPalRouter = require("./routes/payPalRoutes");
 
 dotenv.config();
 const corsOptions = {
   origin: "https://holdinghands.onrender.com",
   // origin: "http://localhost:5173",
   methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
-  credentials: true, 
+  credentials: true,
 };
 app.use(cors(corsOptions));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-
-
 
 // mentee routes
 app.use("/mentee", menteeRouter);
 app.use("/mentor", mentorRouter);
 app.use("/", chatRouter, messageRouter);
 app.use("/stripe", stripeRouter);
+app.use("payPal", payPalRouter);
 app.use(express.static("ChatDocs"));
 app.use(express.static("ChatImgs"));
 

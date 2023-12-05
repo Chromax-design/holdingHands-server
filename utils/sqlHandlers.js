@@ -27,17 +27,27 @@ const insertData = async (tableName, data) => {
   return rows;
 };
 
-const selectData = async (tableName, identifier, value) => {
+const selectData = async (tableName, identifier, value, columnName) => {
   let sql = `SELECT * FROM ${tableName}`;
   if (identifier && value) {
     sql = `SELECT * FROM ${tableName} WHERE ${identifier} = ?`;
   }
-  const [rows] = await pool.query(sql, [value], (err) => {
-    if (err) {
-      console.error(err);
+  
+  if (columnName) {
+    // Selecting a specific column
+    sql = `SELECT ${columnName} FROM ${tableName}`;
+    if (identifier && value) {
+      sql = `SELECT ${columnName} FROM ${tableName} WHERE ${identifier} = ?`;
     }
-  });
-  return rows;
+  }
+
+  try {
+    const [rows] = await pool.query(sql, [value]);
+    return rows;
+  } catch (error) {
+    console.error(error);
+    throw error; // You might want to handle or log the error appropriately
+  }
 };
 
 const deleteData = async (tableName, identifier, value) => {

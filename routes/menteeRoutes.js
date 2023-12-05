@@ -18,6 +18,7 @@ const {
   getMyMentors,
 } = require("../controllers/menteeControllers");
 const multer = require("multer");
+const checkSubscriptionExpiration = require("../middlewares/checkSubscription");
 
 const menteeRouter = express.Router();
 
@@ -31,7 +32,7 @@ menteeRouter.post("/register", Register);
 menteeRouter.post("/verifyEmail", verifyEmailOTP);
 menteeRouter.post("/resendEmailOTP", resendEmailOTP);
 menteeRouter.post("/login", Login);
-menteeRouter.post("/loginWithGoogle", loginWithGoogle)
+menteeRouter.post("/loginWithGoogle", loginWithGoogle);
 
 menteeRouter.post("/sendpwdResetOTP", sendPwdResetOTP);
 menteeRouter.post("/verifyPwdOTP", verifyPwdOTP);
@@ -42,7 +43,11 @@ menteeRouter.put("/upload/:userId", upload.single("file"), Upload);
 menteeRouter.put("/userdetails/:userId", updateDetails);
 menteeRouter.put("/menteeprofile/:userId", updateMenteeProfile);
 
-menteeRouter.get("/payments/:userId", paymentDetails)
-menteeRouter.get("/myMentors/:userId", getMyMentors)
+menteeRouter.get("/payments/:userId", paymentDetails);
+menteeRouter.get(
+  "/myMentors/:userId",
+  checkSubscriptionExpiration,
+  getMyMentors
+);
 
 module.exports = menteeRouter;
