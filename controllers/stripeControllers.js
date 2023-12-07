@@ -31,6 +31,7 @@ const StripeCheckout = async (req, res) => {
       mentor_Id: product.mentorId,
       mentee_Id: product.menteeId,
       amount: product.price,
+      expired: false
     };
 
     await insertData("subscription", checkOutObject);

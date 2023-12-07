@@ -9,11 +9,11 @@ const messageRouter = require("./routes/messageRoutes");
 const { app, server } = require("./socket/socket");
 const { stripeRouter } = require("./routes/stripeRoutes");
 const payPalRouter = require("./routes/payPalRoutes");
+const OriginUrl = require("./socket/origins");
 
 dotenv.config();
-const corsOptions = {
-  origin: "https://weholdahand.netlify.app",
-  // origin: "http://localhost:5173",
+const corsOptions = {  
+  origin: OriginUrl,
   methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
   credentials: true,
 };

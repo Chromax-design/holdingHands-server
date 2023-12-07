@@ -1,21 +1,12 @@
 const mysql = require("mysql2/promise");
 const pool = mysql.createPool({
-  host: process.env.DBHOST,
-  user: process.env.DBUSER,
-  password: process.env.DBPASSWORD,
-  database: process.env.DATABASE,
+  host: process.env.DBHOST ?? "localhost",
+  user: process.env.DBUSER ?? "root",
+  password: process.env.DBPASSWORD ?? "",
+  database: process.env.DATABASE ?? "holdinghands",
   waitForConnections: true,
   connectionLimit: 10,
 });
-
-// const pool = mysql.createPool({
-//   host: "localhost",
-//   user: "root",
-//   password: "",
-//   database: "holdinghands",
-//   waitForConnections: true,
-//   connectionLimit: 10,
-// });
 
 const insertData = async (tableName, data) => {
   const sql = `INSERT INTO ${tableName} SET ?`;
@@ -32,7 +23,7 @@ const selectData = async (tableName, identifier, value, columnName) => {
   if (identifier && value) {
     sql = `SELECT * FROM ${tableName} WHERE ${identifier} = ?`;
   }
-  
+
   if (columnName) {
     // Selecting a specific column
     sql = `SELECT ${columnName} FROM ${tableName}`;
@@ -80,7 +71,6 @@ const searchData = async (tableName, identifier, wildcard) => {
     return false;
   }
 };
-
 
 module.exports = {
   insertData,

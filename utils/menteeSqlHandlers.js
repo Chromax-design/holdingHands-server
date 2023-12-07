@@ -1,21 +1,12 @@
 const mysql = require("mysql2/promise");
 const pool = mysql.createPool({
-  host: process.env.DBHOST,
-  user: process.env.DBUSER,
-  password: process.env.DBPASSWORD,
-  database: process.env.DATABASE,
+  host: process.env.DBHOST ?? "localhost",
+  user: process.env.DBUSER ?? "root",
+  password: process.env.DBPASSWORD ?? "",
+  database: process.env.DATABASE ?? "holdinghands",
   waitForConnections: true,
   connectionLimit: 10,
 });
-
-// const pool = mysql.createPool({
-//   host: "localhost",
-//   user: "root",
-//   password: "",
-//   database: "holdinghands",
-//   waitForConnections: true,
-//   connectionLimit: 10,
-// });
 
 const getPaymentDetails = async (value) => {
   const sql = `SELECT subscription.amount, subscription.payment_Id, subscription.payment_status, subscription.subscribed_at, mentors.firstName, mentors.initials FROM subscription JOIN mentors ON subscription.mentor_Id = mentors.id WHERE subscription.mentee_Id = ?`;

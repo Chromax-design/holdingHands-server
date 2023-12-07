@@ -1,23 +1,5 @@
 const moment = require("moment");
-const mysql = require("mysql2/promise");
 const { updateData, selectData } = require("../utils/sqlHandlers");
-const pool = mysql.createPool({
-  host: process.env.DBHOST,
-  user: process.env.DBUSER,
-  password: process.env.DBPASSWORD,
-  database: process.env.DATABASE,
-  waitForConnections: true,
-  connectionLimit: 10,
-});
-
-// const pool = mysql.createPool({
-//   host: "localhost",
-//   user: "root",
-//   password: "",
-//   database: "holdinghands",
-//   waitForConnections: true,
-//   connectionLimit: 10,
-// });
 
 const checkSubscriptionExpiration = async (req, res, next) => {
   const { userId } = req.params;
