@@ -2,7 +2,7 @@ const { insertData } = require("../utils/sqlHandlers");
 
 const payPalController = async (req, res) => {
   const { details, product } = req.body;
-  console.log(details);
+  // console.log(details);
 
   try {
     if (details.status === "COMPLETED") {
@@ -14,6 +14,7 @@ const payPalController = async (req, res) => {
         payment_status: details.status,
         expired: false,
       };
+      console.log(payment);
       await insertData("subscription", payment);
       res
         .status(200)
