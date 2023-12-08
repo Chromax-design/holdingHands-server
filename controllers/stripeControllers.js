@@ -34,8 +34,8 @@ const StripeCheckout = async (req, res) => {
       expired: false
     };
 
-    // await insertData("subscription", checkOutObject);
-    // console.log(checkOutObject);
+    await insertData("subscription", checkOutObject);
+    console.log(checkOutObject);
 
     res.json({ id: session.id });
   } catch (error) {
@@ -55,7 +55,7 @@ const StripeWebhook = async (req, res) => {
           payment_status: session.payment_status,
         };
 
-        // await updateData("subscription", webHookData, "mentee_Id", userId);
+        await updateData("subscription", webHookData, "mentee_Id", userId);
 
         console.log(session);
         break;
