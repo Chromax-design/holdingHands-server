@@ -26,7 +26,7 @@ app.use("/mentee", menteeRouter);
 app.use("/mentor", mentorRouter);
 app.use("/", chatRouter, messageRouter);
 app.use("/stripe", stripeRouter);
-app.use("payPal", payPalRouter);
+app.use("/payPal", payPalRouter);
 app.use(express.static("ChatDocs"));
 app.use(express.static("ChatImgs"));
 
