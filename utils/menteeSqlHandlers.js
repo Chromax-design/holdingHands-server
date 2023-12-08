@@ -9,8 +9,8 @@ const pool = mysql.createPool({
 });
 
 const getPaymentDetails = async (value) => {
-  const sql = `SELECT subscription.amount, subscription.payment_Id, subscription.payment_status, subscription.subscribed_at, mentors.firstName, mentors.initials FROM subscription JOIN mentors ON subscription.mentor_Id = mentors.id WHERE subscription.mentee_Id = ? AND subscription.payment_status != ?`;
-  const [rows] = await pool.query(sql, [value, null], (err) => {
+  const sql = `SELECT subscription.amount, subscription.payment_Id, subscription.payment_status, subscription.subscribed_at, mentors.firstName, mentors.initials FROM subscription JOIN mentors ON subscription.mentor_Id = mentors.id WHERE subscription.mentee_Id = ? AND subscription.payment_status IS NOT NULL AND subscription.payment_status != ''`;
+  const [rows] = await pool.query(sql, [value], (err) => {
     if (err) {
       console.error(err);
     }
