@@ -307,21 +307,19 @@ const Upload = async (req, res) => {
 };
 
 const updateDetails = async (req, res) => {
-  const { firstName, initials, dob, country, city, bio } = req.body;
+  const { firstName, initials, dob, country, bio } = req.body;
   const { userId } = req.params;
   const updates = {
     firstName,
     initials,
     dob,
     country,
-    city,
     bio,
-    updated: true,
   };
   await updateData("mentees", updates, "id", userId);
   res
-    .status(200)
-    .json({ message: "Profile updated successfully", update: updates });
+  .status(200)
+  .json({ message: "Profile updated successfully", update: updates });
 };
 
 const updateMenteeProfile = async (req, res) => {
