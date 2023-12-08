@@ -9,7 +9,7 @@ const payPalController = async (req, res) => {
       const payment = {
         mentor_Id: product.mentorId,
         mentee_id: product.menteeId,
-        amount: details.payment_units[0].value,
+        amount: product.price,
         payment_Id: details.id,
         payment_status: details.status,
         expired: false,
