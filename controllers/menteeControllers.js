@@ -21,6 +21,8 @@ const sendEmail = require("../utils/mailer");
 const {
   getPaymentDetails,
   getMentorSubscribed,
+  getReviewData,
+  checkSub,
 } = require("../utils/menteeSqlHandlers");
 
 const getAllMentees = async (req, res) => {
@@ -318,8 +320,8 @@ const updateDetails = async (req, res) => {
   };
   await updateData("mentees", updates, "id", userId);
   res
-  .status(200)
-  .json({ message: "Profile updated successfully", update: updates });
+    .status(200)
+    .json({ message: "Profile updated successfully", update: updates });
 };
 
 const updateMenteeProfile = async (req, res) => {
@@ -359,7 +361,6 @@ const paymentDetails = async (req, res) => {
   const { userId } = req.params;
   try {
     const data = await getPaymentDetails(userId);
-    // console.log(data);
     return res.json({ message: "received", payment: data });
   } catch (error) {
     console.log(error);
@@ -370,8 +371,45 @@ const getMyMentors = async (req, res) => {
   const { userId } = req.params;
   try {
     const data = await getMentorSubscribed(userId);
-    // console.log(data);
     return res.json({ message: "received", subscribed: data });
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+const handleReviews = async (req, res) => {
+  const review = req.body;
+  try {
+    await insertData("reviews", review);
+    return res.status(200).json({ message: "Review submitted" });
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+const getReviews = async (req, res) => {
+  const { mentorId } = req.params;
+  try {
+    const data = await getReviewData(mentorId);
+    return res.status(200).json({ mentorId, reviews: data });
+  } catch (error) {
+    console.log(error);
+  }
+  return res.json({ message: "received" });
+};
+
+const checkSubscribed = async (req, res) => {
+  const { userId } = req.params;
+  try {
+    const data = await checkSub(userId);
+    if (data.length == 0) {
+      return res.json({ expired: true });
+    }
+    if (data[0].expired == false) {
+      return res.json({ expired: false });
+    } else {
+      return res.json({ expired: true });
+    }
   } catch (error) {
     console.log(error);
   }
@@ -394,4 +432,7 @@ module.exports = {
   resetPwd,
   paymentDetails,
   getMyMentors,
+  handleReviews,
+  getReviews,
+  checkSubscribed,
 };

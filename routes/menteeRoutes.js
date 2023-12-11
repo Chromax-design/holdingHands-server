@@ -16,6 +16,9 @@ const {
   getAllMentees,
   paymentDetails,
   getMyMentors,
+  handleReviews,
+  getReviews,
+  checkSubscribed,
 } = require("../controllers/menteeControllers");
 const multer = require("multer");
 const checkSubscriptionExpiration = require("../middlewares/checkSubscription");
@@ -43,7 +46,11 @@ menteeRouter.put("/upload/:userId", upload.single("file"), Upload);
 menteeRouter.put("/userdetails/:userId", updateDetails);
 menteeRouter.put("/menteeprofile/:userId", updateMenteeProfile);
 
+menteeRouter.post("/reviews", handleReviews);
+menteeRouter.get("/reviews/:mentorId", getReviews);
+
 menteeRouter.get("/payments/:userId", paymentDetails);
+menteeRouter.get("/checkSubscribed/:userId", checkSubscribed);
 menteeRouter.get(
   "/myMentors/:userId",
   checkSubscriptionExpiration,
