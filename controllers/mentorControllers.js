@@ -23,7 +23,11 @@ const {
   genAccessToken,
 } = require("../utils/utilities");
 const sendEmail = require("../utils/mailer");
-const { getMenteeSubscribed, getPaymentDetails } = require("../utils/mentorSqlHandlers");
+const {
+  getMenteeSubscribed,
+  getPaymentDetails,
+  getReviewCount,
+} = require("../utils/mentorSqlHandlers");
 
 const getAllMentors = async (req, res) => {
   const data = await selectData("mentors", "updated", true);
@@ -288,7 +292,6 @@ const Upload = async (req, res) => {
     .end(req.file.buffer);
 };
 
-
 const updateDetails = async (req, res) => {
   const {
     firstName,
@@ -379,17 +382,26 @@ const paymentDetails = async (req, res) => {
   }
 };
 
-
-const getMyMentees = async(req, res)=>{
-  const {userId} = req.params;
+const getMyMentees = async (req, res) => {
+  const { userId } = req.params;
   try {
-    const data = await getMenteeSubscribed(userId)
+    const data = await getMenteeSubscribed(userId);
     // console.log(data)
-    return res.json({message: 'received', subscribed: data})
+    return res.json({ message: "received", subscribed: data });
   } catch (error) {
-    console.log(error)
+    console.log(error);
   }
-}
+};
+
+const countReview = async (req, res) => {
+  const { userId } = req.params;
+  try {
+    const data = await getReviewCount(userId);
+    return res.json({ count: data.length });
+  } catch (error) {
+    console.log(error);
+  }
+};
 
 module.exports = {
   getAllMentors,
@@ -408,5 +420,6 @@ module.exports = {
   updateDetails,
   updateMentorProfile,
   paymentDetails,
-  getMyMentees
+  getMyMentees,
+  countReview,
 };

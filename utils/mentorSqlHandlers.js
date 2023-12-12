@@ -8,7 +8,6 @@ const pool = mysql.createPool({
   connectionLimit: 10,
 });
 
-
 const getPaymentDetails = async (value) => {
   const sql = `SELECT subscription.amount, subscription.payment_Id, subscription.payment_status, subscription.subscribed_at, mentees.firstName, mentees.initials FROM subscription JOIN mentees ON subscription.mentee_Id = mentees.id WHERE subscription.mentor_Id = ?`;
   const [rows] = await pool.query(sql, [value], (err) => {
@@ -29,7 +28,18 @@ const getMenteeSubscribed = async (value) => {
   return row;
 };
 
+const getReviewCount = async (value) => {
+  const sql = `SELECT * FROM reviews WHERE mentor_Id = ?`;
+  const [row] = await pool.query(sql, [value], (err) => {
+    if (err) {
+      console.error(err);
+    }
+  });
+  return row;
+};
+
 module.exports = {
   getPaymentDetails,
   getMenteeSubscribed,
+  getReviewCount,
 };
