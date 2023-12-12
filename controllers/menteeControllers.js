@@ -399,9 +399,10 @@ const getReviews = async (req, res) => {
 };
 
 const checkSubscribed = async (req, res) => {
-  const { userId } = req.params;
+  const {mentor, mentee} = req.params;
   try {
-    const data = await checkSub(userId);
+    const data = await checkSub(mentor, mentee);
+    // console.log(data)
     if (data.length == 0) {
       return res.json({ expired: true });
     }

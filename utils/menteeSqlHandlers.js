@@ -38,9 +38,9 @@ const getReviewData = async (mentor)=>{
   return row
 }
 
-const checkSub = async (mentor)=>{
-  const sql = `SELECT expired FROM subscription WHERE mentor_Id = ?`
-  const [row] = await pool.query(sql, [mentor], (err)=>{
+const checkSub = async (mentor, mentee)=>{
+  const sql = `SELECT expired FROM subscription WHERE mentor_Id = ? AND mentee_Id = ?`
+  const [row] = await pool.query(sql, [mentor, mentee], (err)=>{
     if (err) {
       console.error(err);
     }

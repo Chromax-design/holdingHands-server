@@ -50,7 +50,7 @@ menteeRouter.post("/reviews", handleReviews);
 menteeRouter.get("/reviews/:mentorId", getReviews);
 
 menteeRouter.get("/payments/:userId", paymentDetails);
-menteeRouter.get("/checkSubscribed/:userId", checkSubscribed);
+menteeRouter.get("/checkSubscribed/:mentor/:mentee", checkSubscribed);
 menteeRouter.get(
   "/myMentors/:userId",
   checkSubscriptionExpiration,
