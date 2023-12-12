@@ -5,8 +5,8 @@ const stripe = require("stripe")(
 );
 
 const StripeCheckout = async (req, res) => {
-  const { checkout } = req.body;
-  console.log(checkout)
+  const { checkOut } = req.body;
+  console.log(checkOut);
   try {
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ["card"],
@@ -15,23 +15,23 @@ const StripeCheckout = async (req, res) => {
           price_data: {
             currency: "usd",
             product_data: {
-              name: checkout.name,
+              name: checkOut.name,
             },
-            unit_amount: checkout.price,
+            unit_amount: checkOut.price * 100,
           },
-          quantity: checkout.quantity,
+          quantity: checkOut.quantity,
         },
       ],
       mode: "payment",
       success_url: `${process.env.FRONTEND_URL}/stripe/success`,
       cancel_url: `${process.env.FRONTEND_URL}/stripe/cancel`,
-      client_reference_id: checkout.menteeId,
+      client_reference_id: checkOut.menteeId,
     });
 
     const checkOutObject = {
-      mentor_Id: checkout.mentorId,
-      mentee_Id: checkout.menteeId,
-      amount: checkout.price,
+      mentor_Id: checkOut.mentorId,
+      mentee_Id: checkOut.menteeId,
+      amount: checkOut.price,
       expired: false,
     };
 
