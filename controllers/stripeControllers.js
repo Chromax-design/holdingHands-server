@@ -6,41 +6,42 @@ const stripe = require("stripe")(
 
 const StripeCheckout = async (req, res) => {
   const { checkout } = req.body;
-  try {
-    const session = await stripe.checkout.sessions.create({
-      payment_method_types: ["card"],
-      line_items: [
-        {
-          price_data: {
-            currency: "usd",
-            product_data: {
-              name: checkout.name,
-            },
-            unit_amount: checkout.price,
-          },
-          quantity: checkout.quantity,
-        },
-      ],
-      mode: "payment",
-      success_url: `${process.env.FRONTEND_URL}/stripe/success`,
-      cancel_url: `${process.env.FRONTEND_URL}/stripe/cancel`,
-      client_reference_id: checkout.menteeId,
-    });
+  console.log(checkout)
+  // try {
+  //   const session = await stripe.checkout.sessions.create({
+  //     payment_method_types: ["card"],
+  //     line_items: [
+  //       {
+  //         price_data: {
+  //           currency: "usd",
+  //           product_data: {
+  //             name: checkout.name,
+  //           },
+  //           unit_amount: checkout.price,
+  //         },
+  //         quantity: checkout.quantity,
+  //       },
+  //     ],
+  //     mode: "payment",
+  //     success_url: `${process.env.FRONTEND_URL}/stripe/success`,
+  //     cancel_url: `${process.env.FRONTEND_URL}/stripe/cancel`,
+  //     client_reference_id: checkout.menteeId,
+  //   });
 
-    const checkOutObject = {
-      mentor_Id: checkout.mentorId,
-      mentee_Id: checkout.menteeId,
-      amount: checkout.price,
-      expired: false,
-    };
+  //   const checkOutObject = {
+  //     mentor_Id: checkout.mentorId,
+  //     mentee_Id: checkout.menteeId,
+  //     amount: checkout.price,
+  //     expired: false,
+  //   };
 
-    await insertData("subscription", checkOutObject);
-    console.log(checkOutObject);
+  //   await insertData("subscription", checkOutObject);
+  //   console.log(checkOutObject);
 
-    res.json({ id: session.id });
-  } catch (error) {
-    console.log(error);
-  }
+  //   res.json({ id: session.id });
+  // } catch (error) {
+  //   console.log(error);
+  // }
 };
 
 const StripeWebhook = async (req, res) => {
