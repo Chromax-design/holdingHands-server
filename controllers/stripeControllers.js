@@ -5,7 +5,7 @@ const stripe = require("stripe")(
 );
 
 const StripeCheckout = async (req, res) => {
-  const { product } = req.body;
+  const { checkout } = req.body;
   try {
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ["card"],
@@ -14,24 +14,24 @@ const StripeCheckout = async (req, res) => {
           price_data: {
             currency: "usd",
             product_data: {
-              name: product.name,
+              name: checkout.name,
             },
-            unit_amount: product.price * 100,
+            unit_amount: checkout.price,
           },
-          quantity: product.quantity,
+          quantity: checkout.quantity,
         },
       ],
       mode: "payment",
       success_url: `${process.env.FRONTEND_URL}/stripe/success`,
       cancel_url: `${process.env.FRONTEND_URL}/stripe/cancel`,
-      client_reference_id: product.menteeId,
+      client_reference_id: checkout.menteeId,
     });
 
     const checkOutObject = {
-      mentor_Id: product.mentorId,
-      mentee_Id: product.menteeId,
-      amount: product.price,
-      expired: false
+      mentor_Id: checkout.mentorId,
+      mentee_Id: checkout.menteeId,
+      amount: checkout.price,
+      expired: false,
     };
 
     await insertData("subscription", checkOutObject);
@@ -53,6 +53,7 @@ const StripeWebhook = async (req, res) => {
         const webHookData = {
           payment_Id: session.payment_intent,
           payment_status: session.payment_status,
+          payment_method: "stripe",
         };
 
         await updateData("subscription", webHookData, "mentee_Id", userId);
