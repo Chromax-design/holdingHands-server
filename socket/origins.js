@@ -1,3 +1,2 @@
-const OriginUrl = process.env.FRONTEND_URL;
-// const OriginUrl ="http://localhost:5173";
+const OriginUrl = "https://weholdahand.com";
 module.exports = OriginUrl
