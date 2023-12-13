@@ -2,11 +2,10 @@ const express = require("express");
 const app = express();
 const { Server } = require("socket.io");
 const http = require("http");
-const OriginUrl = require("./origins");
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
-    origin: OriginUrl,
+    origin: "https://weholdahand.netlify.app",
   },
 });
 
