@@ -202,6 +202,7 @@ const loginWithGoogle = async (req, res) => {
     } else {
       const userData = {
         firstName,
+        initials: "",
         email,
         userId: uuidv4(),
         password: "",
