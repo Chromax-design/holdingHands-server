@@ -7,12 +7,13 @@ const connectDB = () => {
       user: process.env.DBUSER ?? "root",
       password: process.env.DBPASSWORD ?? "",
       database: process.env.DATABASE ?? "holdinghands",
-      waitForConnections: true,
       connectionLimit: 10,
+      waitForConnections: true,
     });
     pool.getConnection((err, conn) => {
       if (err) console.log(err);
       console.log("Connected successfully");
+      conn.release()
     });
   } catch (error) {
     console.log(error)
