@@ -9,14 +9,19 @@ const connectDB = () => {
       database: process.env.DATABASE,
       connectionLimit: 10,
       waitForConnections: true,
+      maxIdle: 10,
+      idleTimeout: 60000,
+      queueLimit: 0,
+      enableKeepAlive: true,
+      keepAliveInitialDelay: 0,
     });
-    pool.getConnection((err, conn) => {
+    pool.getConnection((err) => {
       if (err) console.log(err);
       console.log("Connected successfully");
-      conn.release()
+      pool.releaseConnection();
     });
   } catch (error) {
-    console.log(error)
+    console.log(error);
   }
 };
 
