@@ -15,10 +15,10 @@ const connectDB = () => {
       enableKeepAlive: true,
       keepAliveInitialDelay: 0,
     });
-    pool.getConnection((err) => {
+    pool.getConnection((err, conn) => {
       if (err) console.log(err);
       console.log("Connected successfully");
-      pool.releaseConnection();
+      pool.releaseConnection(conn);
     });
   } catch (error) {
     console.log(error);
