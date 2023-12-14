@@ -95,10 +95,8 @@ const Register = async (req, res) => {
   const subject = "OTP Verification for your weHoldaHand mentor Account";
   const emailMessage = createMessage(otpMessage, subject, otp);
 
-  await Promise.all([
-    sendEmail(email, subject, emailMessage),
-    insertData("otptable", { otp, userId: user.userId, timestamp: time }),
-  ]);
+  await sendEmail(email, subject, emailMessage);
+  await insertData("otptable", { otp, userId: user.userId, timestamp: time });
 
   return res.status(200).json({
     success: true,
@@ -135,14 +133,12 @@ const resendEmailOTP = async (req, res) => {
     const subject = "OTP Verification for your weHoldaHand mentor Account";
     const emailMessage = createMessage(otpMessage, subject, otp);
     console.log(data);
-    Promise.all([
-      sendEmail(email, subject, emailMessage),
-      insertData("otptable", {
-        otp: otp,
-        userId: data.userId,
-        timestamp: time,
-      }),
-    ]);
+    await sendEmail(email, subject, emailMessage);
+    await insertData("otptable", {
+      otp: otp,
+      userId: data.userId,
+      timestamp: time,
+    });
 
     return res.status(200).json({
       success: true,
@@ -163,14 +159,12 @@ const sendPwdResetOTP = async (req, res) => {
     const subject = "Password Reset OTP for Your WeHoldaHand Mentor Account";
     const emailMessage = createMessage(otpMessage, subject, otp);
 
-    await Promise.all([
-      sendEmail(email, subject, emailMessage),
-      insertData("otptable", {
-        otp: otp,
-        userId: data[0].userId,
-        timestamp: time,
-      }),
-    ]);
+    await sendEmail(email, subject, emailMessage);
+    await insertData("otptable", {
+      otp: otp,
+      userId: data[0].userId,
+      timestamp: time,
+    });
 
     return res.status(200).json({
       success: true,
