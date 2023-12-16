@@ -1,7 +1,8 @@
 const { insertData, updateData } = require("../utils/sqlHandlers");
 
 const stripe = require("stripe")(
-  "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"
+  // "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"
+  "pk_test_51N2arXIYmnZ4DnJJ1gSvYCDhGFLAVDTHGPo8vTJTdJPnioyLZYnYAJUho80iMQsHPLXRbFD0SYqyt4y1hmps79ci00xEmplYtF"
 );
 
 const StripeCheckout = async (req, res) => {

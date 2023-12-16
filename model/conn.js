@@ -18,4 +18,22 @@ const connectDB = () => {
   });
 };
 
+// const connectDB = () => {
+//   const pool = mysql.createPool({
+//     host: "localhost",
+//     user: "root",
+//     password: "",
+//     database: "holdingHands",
+//     connectionLimit: 10,
+//     waitForConnections: true,
+//   });
+//   pool.getConnection((err, connection) => {
+//     if (err) {
+//       console.log({ error: err.message });
+//     }
+//     console.log("Connected successfully");
+//     connection.release();
+//   });
+// };
+
 module.exports = connectDB;

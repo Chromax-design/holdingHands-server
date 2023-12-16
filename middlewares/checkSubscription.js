@@ -9,9 +9,9 @@ const checkSubscriptionExpiration = async (req, res, next) => {
     userId,
     "subscribed_at"
   );
-  if (results.length == 0) {
-    return res.status(403).json({ error: "No subscription found." });
-  }
+  // if (results.length == 0) {
+  //   return res.json({ error: "No subscription found." });
+  // }
 
   for (const subscription of results) {
     const paymentTimestamp = moment(subscription.subscribed_at);
@@ -28,7 +28,6 @@ const checkSubscriptionExpiration = async (req, res, next) => {
       await updateData("subscription", updates, "mentee_id", userId);
       console.log("Subscription has expired for user:", userId);
       return res
-        .status(403)
         .json({ expired: true, error: "Subscription has expired." });
     }
   }

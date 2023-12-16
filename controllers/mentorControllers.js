@@ -1,5 +1,6 @@
 const bcrypt = require("bcryptjs");
 const { v4: uuidv4 } = require("uuid");
+const crypto = require("crypto");
 
 const {
   insertData,
@@ -17,12 +18,8 @@ cloudinary.config({
 });
 
 const {
-  verifyOTP,
-  generateOTP,
-  createMessage,
   genAccessToken,
 } = require("../utils/utilities");
-const sendEmail = require("../utils/mailer");
 const {
   getMenteeSubscribed,
   getPaymentDetails,
@@ -30,7 +27,7 @@ const {
 } = require("../utils/mentorSqlHandlers");
 
 const getAllMentors = async (req, res) => {
-  const data = await selectData("mentors", "updated", true);
+  const data = await selectData("mentors", "verified", true);
   return res.status(200).json({ mentors: [...data] });
 };
 
@@ -43,7 +40,7 @@ const getMentorProfile = async (req, res) => {
 const searchMentor = async (req, res) => {
   const { industry } = req.params;
   try {
-    const data = await selectData("mentors", "industry", industry);
+    const data = await searchData("mentors", "industry", industry);
     return res.status(200).json({ mentors: [...data] });
   } catch (error) {
     console.log(error);
@@ -88,110 +85,23 @@ const Register = async (req, res) => {
       .json({ success: false, message: "User already exists" });
   }
 
-  await insertData("mentors", user);
-  const { otp, time } = generateOTP();
-  const otpMessage = `Dear ${user.firstName},<br/><br/>
-  We hope this message finds you well. As part of our commitment to ensuring the security of your account with weHoldaHand, we are implementing an additional layer of protection through OTP (One-Time Password) verification. Below is your code and it expires in 5mins`;
-  const subject = "OTP Verification for your weHoldaHand mentor Account";
-  const emailMessage = createMessage(otpMessage, subject, otp);
-
-  await sendEmail(email, subject, emailMessage);
-  await insertData("otptable", { otp, userId: user.userId, timestamp: time });
-
+  const { insertId } = await insertData("mentors", user);
+  console.log(insertId);
   return res.status(200).json({
     success: true,
-    message: "Your OTP has been sent to your email address",
+    message: "Success! Please update your application",
+    userId: insertId,
   });
 };
 
-const verifyEmailOTP = async (req, res) => {
-  const { otp } = req.body;
-  const data = await selectData("otptable", "otp", otp);
-  if (data.length > 0) {
-    const storedTimestamp = data[0].timestamp;
-    if (verifyOTP(storedTimestamp)) {
-      return res.status(200).json({
-        success: true,
-        userId: data[0].userId,
-        message: "Registration successful",
-      });
-    } else {
-      return res.status.json({ expired: true, message: "OTP expired" });
-    }
-  } else {
-    return res.status(404).json({ success: false, message: "OTP not found" });
-  }
-};
-
-const resendEmailOTP = async (req, res) => {
+const checkEmail = async (req, res) => {
   const { email } = req.body;
+  console.log(email);
   const data = await selectData("mentors", "email", email);
-  if (data.length > 0) {
-    const { otp, time } = generateOTP();
-    const otpMessage = `Dear ${data[0].firstName},<br/><br/>
-    We hope this message finds you well. As part of our commitment to ensuring the security of your account with weHoldaHand, we are implementing an additional layer of protection through OTP (One-Time Password) verification. Below is your code and it expires in 5mins`;
-    const subject = "OTP Verification for your weHoldaHand mentor Account";
-    const emailMessage = createMessage(otpMessage, subject, otp);
-    console.log(data);
-    await sendEmail(email, subject, emailMessage);
-    await insertData("otptable", {
-      otp: otp,
-      userId: data.userId,
-      timestamp: time,
-    });
-
-    return res.status(200).json({
-      success: true,
-      message: "Your OTP has been sent to your email address",
-    });
-  } else {
-    return res.status(404).json({ message: "Email does not exist" });
+  if (data.length == 0) {
+    return res.status(404).json({ message: "Email not found" });
   }
-};
-
-const sendPwdResetOTP = async (req, res) => {
-  const { email } = req.body;
-  const data = await selectData("mentors", "email", email);
-  if (data.length == 1) {
-    const { otp, time } = generateOTP();
-    const otpMessage = `Dear ${data[0].firstName},<br/><br/>
-    We recently received a request to reset the password for your mentee account. To proceed with the password reset, please use the following One-Time Password (OTP):`;
-    const subject = "Password Reset OTP for Your WeHoldaHand Mentor Account";
-    const emailMessage = createMessage(otpMessage, subject, otp);
-
-    await sendEmail(email, subject, emailMessage);
-    await insertData("otptable", {
-      otp: otp,
-      userId: data[0].userId,
-      timestamp: time,
-    });
-
-    return res.status(200).json({
-      success: true,
-      message: "Your OTP has been sent to your email address",
-    });
-  } else {
-    return res.status(404).json({ message: "Email does not exist" });
-  }
-};
-
-const verifyPwdOTP = async (req, res) => {
-  const { otp } = req.body;
-  const data = await selectData("otptable", "otp", otp);
-  if (data.length > 0) {
-    const storedTimestamp = data[0].timestamp;
-    if (verifyOTP(storedTimestamp)) {
-      return res.status(200).json({
-        success: true,
-        userId: data[0].userId,
-        message: "OTP is valid",
-      });
-    } else {
-      return res.json({ expired: true, message: "OTP expired" });
-    }
-  } else {
-    return res.status(404).json({ success: false, message: "OTP not found" });
-  }
+  res.json({ valid: true, userId: data[0].id });
 };
 
 const updateApplication = async (req, res) => {
@@ -199,7 +109,7 @@ const updateApplication = async (req, res) => {
   const {
     job_title,
     industry,
-    yrs_of_experience,
+    experience,
     social_link,
     bio,
     why_mentoring,
@@ -208,7 +118,7 @@ const updateApplication = async (req, res) => {
   const updates = {
     job_title,
     industry,
-    yrs_of_experience,
+    experience,
     social_link,
     bio,
     why_mentoring,
@@ -216,7 +126,7 @@ const updateApplication = async (req, res) => {
     updated: true,
   };
   try {
-    const updated = await updateData("mentors", updates, "userId", userId);
+    const updated = await updateData("mentors", updates, "id", userId);
     if (updated === false) {
       return res.json({
         success: false,
@@ -290,8 +200,6 @@ const updateDetails = async (req, res) => {
   const {
     firstName,
     initials,
-    currentRole,
-    experience,
     skills,
     bio,
     How_help,
@@ -301,8 +209,6 @@ const updateDetails = async (req, res) => {
   const updates = {
     firstName,
     initials,
-    currentRole,
-    experience,
     skills,
     bio,
     How_help,
@@ -320,7 +226,7 @@ const updateMentorProfile = async (req, res) => {
   const {
     job_title,
     industry,
-    yrs_of_experience,
+    experience,
     social_link,
     bio,
     why_mentoring,
@@ -329,15 +235,15 @@ const updateMentorProfile = async (req, res) => {
   const updates = {
     job_title,
     industry,
-    yrs_of_experience,
     social_link,
     bio,
+    experience,
     why_mentoring,
     telNumber,
     updated: true,
   };
   try {
-    await updateData("mentors", updates, "userId", userId);
+    await updateData("mentors", updates, "id", userId);
     res.json({
       message: "Application submitted successfully",
       update: updates,
@@ -403,10 +309,7 @@ module.exports = {
   searchMentor,
   handleSearch,
   Register,
-  verifyEmailOTP,
-  resendEmailOTP,
-  sendPwdResetOTP,
-  verifyPwdOTP,
+  checkEmail,
   resetPwd,
   updateApplication,
   Login,

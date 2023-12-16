@@ -1,10 +1,6 @@
 const express = require("express");
 const {
   Register,
-  verifyEmailOTP,
-  resendEmailOTP,
-  sendPwdResetOTP,
-  verifyPwdOTP,
   resetPwd,
   updateApplication,
   Login,
@@ -18,6 +14,7 @@ const {
   getMyMentees,
   paymentDetails,
   countReview,
+  checkEmail,
 } = require("../controllers/mentorControllers");
 const multer = require("multer");
 const mentorRouter = express.Router();
@@ -31,11 +28,7 @@ mentorRouter.get("/search/:industry", searchMentor);
 mentorRouter.post("/search", handleSearch);
 
 mentorRouter.post("/register", Register);
-mentorRouter.post("/verifyEmail", verifyEmailOTP);
-mentorRouter.post("/resendEmailOTP", resendEmailOTP);
-
-mentorRouter.post("/sendpwdResetOTP", sendPwdResetOTP);
-mentorRouter.post("/verifyPwdOTP", verifyPwdOTP);
+mentorRouter.post("/checkEmail", checkEmail)
 mentorRouter.put("/resetpwd/:userId", resetPwd);
 
 mentorRouter.post("/login", Login);

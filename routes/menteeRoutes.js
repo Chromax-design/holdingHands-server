@@ -1,14 +1,9 @@
 const express = require("express");
 const {
   Register,
-  verifyEmailOTP,
-  resendEmailOTP,
   updateApplication,
   Login,
   loginWithGoogle,
-  sendPwdResetOTP,
-  verifyPwdOTP,
-  resetPwd,
   Upload,
   updateMenteeProfile,
   updateDetails,
@@ -19,6 +14,8 @@ const {
   handleReviews,
   getReviews,
   checkSubscribed,
+  checkEmail,
+  resetPwd,
 } = require("../controllers/menteeControllers");
 const multer = require("multer");
 const checkSubscriptionExpiration = require("../middlewares/checkSubscription");
@@ -32,19 +29,16 @@ menteeRouter.get("/", getAllMentees);
 menteeRouter.get("/:userId", getMenteeDetails);
 
 menteeRouter.post("/register", Register);
-menteeRouter.post("/verifyEmail", verifyEmailOTP);
-menteeRouter.post("/resendEmailOTP", resendEmailOTP);
+menteeRouter.post("/checkEmail", checkEmail)
+
 menteeRouter.post("/login", Login);
 menteeRouter.post("/loginWithGoogle", loginWithGoogle);
-
-menteeRouter.post("/sendpwdResetOTP", sendPwdResetOTP);
-menteeRouter.post("/verifyPwdOTP", verifyPwdOTP);
-menteeRouter.put("/resetPwd/:userId", resetPwd);
 
 menteeRouter.put("/application/:userId", updateApplication);
 menteeRouter.put("/upload/:userId", upload.single("file"), Upload);
 menteeRouter.put("/userdetails/:userId", updateDetails);
 menteeRouter.put("/menteeprofile/:userId", updateMenteeProfile);
+menteeRouter.put("/resetpwd/:userId", resetPwd);
 
 menteeRouter.post("/reviews", handleReviews);
 menteeRouter.get("/reviews/:mentorId", getReviews);

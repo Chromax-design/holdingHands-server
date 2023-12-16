@@ -2,18 +2,19 @@ const crypto = require("crypto");
 const jwt = require("jsonwebtoken");
 const { selectData } = require("./sqlHandlers");
 
-const generateOTP = () => {
-  const otpRandom = Math.floor(100000 + Math.random() * 900000);
-  const otp = otpRandom.toString();
-  const time = new Date();
+const generateLink = () => {
+  const token = crypto.randomBytes(16).toString("hex");
+  const expirationTime = Date.now() + 24 * 60 * 60 * 1000;
+  const link = `${backendUrl}?userId=${userId}&token=${token}&expires=${expirationTime}&redirect=${frontendUrl}/${userId}/${token}`;
 
-  return { otp, time };
+
+  return link;
 };
 
 const verifyOTP = (storedTimestamp)=> {
   const currentTime = new Date();
   const timeDifference = currentTime - storedTimestamp;
-  const isExpired = timeDifference > 5 * 60 * 1000; // 5 minutes in milliseconds
+  const isExpired = timeDifference > 60 * 60 * 1000; // 1 hr
   if (isExpired) {
     return false
   }else{
@@ -173,7 +174,7 @@ const createMessage = (messsage, subject, otp) => {
 };
 
 module.exports = {
-  generateOTP,
+  generateLink,
   genAccessToken,
   createMessage,
   verifyOTP,
