@@ -1,15 +1,14 @@
 const { insertData } = require("../utils/sqlHandlers");
 
 const payPalController = async (req, res) => {
-  const { details, checkOut } = req.body;
-  // console.log(details);
+  const { details, savedProduct } = req.body;
 
   try {
     if (details.status === "COMPLETED") {
       const payment = {
-        mentor_Id: checkOut.mentorId,
-        mentee_id: checkOut.menteeId,
-        amount: checkOut.price,
+        mentor_Id: savedProduct.mentorId,
+        mentee_id: savedProduct.menteeId,
+        amount: savedProduct.price,
         payment_Id: details.id,
         payment_status: details.status,
         payment_method: 'paypal',

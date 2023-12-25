@@ -1,13 +1,11 @@
 const { insertData, updateData } = require("../utils/sqlHandlers");
 
 const stripe = require("stripe")(
-  // "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"
-  "pk_test_51N2arXIYmnZ4DnJJ1gSvYCDhGFLAVDTHGPo8vTJTdJPnioyLZYnYAJUho80iMQsHPLXRbFD0SYqyt4y1hmps79ci00xEmplYtF"
+  "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"
 );
 
 const StripeCheckout = async (req, res) => {
-  const { checkOut } = req.body;
-  console.log(checkOut);
+  const { savedProduct } = req.body;
   try {
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ["card"],
@@ -16,23 +14,23 @@ const StripeCheckout = async (req, res) => {
           price_data: {
             currency: "usd",
             product_data: {
-              name: checkOut.name,
+              name: savedProduct.fullName,
             },
-            unit_amount: checkOut.price * 100,
+            unit_amount: savedProduct.price * 100,
           },
-          quantity: checkOut.quantity,
+          quantity: 1,
         },
       ],
       mode: "payment",
       success_url: `${process.env.FRONTEND_URL}/stripe/success`,
       cancel_url: `${process.env.FRONTEND_URL}/stripe/cancel`,
-      client_reference_id: checkOut.menteeId,
+      client_reference_id: savedProduct.menteeId,
     });
 
     const checkOutObject = {
-      mentor_Id: checkOut.mentorId,
-      mentee_Id: checkOut.menteeId,
-      amount: checkOut.price,
+      mentor_Id: savedProduct.mentorId,
+      mentee_Id: savedProduct.menteeId,
+      amount: savedProduct.price,
     };
     
     await insertData("subscription", checkOutObject);
