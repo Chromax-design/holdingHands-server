@@ -21,7 +21,8 @@ const {
 
 const getAllMentees = async (req, res) => {
   const data = await selectData("mentees", "updated", true);
-  return res.status(200).json({ mentors: [...data] });
+  console.log(data);
+  return res.status(200).json({ mentees: [...data] });
 };
 
 const getMenteeDetails = async (req, res) => {
