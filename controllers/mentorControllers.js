@@ -66,7 +66,7 @@ const handleSearch = async (req, res) => {
 
 const Register = async (req, res) => {
   const { firstName, initials, email, password, telNumber } = req.body;
-  const saltRounds = 16;
+  const saltRounds = 12;
   const salt = await bcrypt.genSalt(saltRounds);
   const hashedPassword = await bcrypt.hash(password, salt);
   const user = {
@@ -258,7 +258,7 @@ const resetPwd = async (req, res) => {
   const { userId } = req.params;
   try {
     if (password === confirm_password) {
-      const salt = await bcrypt.genSalt(16);
+      const salt = await bcrypt.genSalt(12);
       const hashed = await bcrypt.hash(password, salt);
       const update = { password: hashed };
       await updateData("mentors", update, "id", userId);
