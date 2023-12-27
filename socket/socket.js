@@ -5,10 +5,14 @@ const http = require("http");
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
-    origin: ["https://weholdahand.com", "https://www.weholdahand.com", "https://weholdahand.netlify.app", "http://localhost:5173"],
+    origin: [
+      "https://weholdahand.com",
+      "https://www.weholdahand.com",
+      "https://weholdahand.netlify.app",
+      "http://localhost:5173",
+    ],
   },
 });
-
 
 io.on("connection", (socket) => {
   console.log(`${socket.id} connected`);

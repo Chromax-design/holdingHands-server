@@ -11,8 +11,13 @@ const { stripeRouter } = require("./routes/stripeRoutes");
 const payPalRouter = require("./routes/payPalRoutes");
 
 dotenv.config();
-const corsOptions = {  
-  origin: ["https://weholdahand.com", "https://www.weholdahand.com", "www.weholdahand.netlify.app", "http://localhost:5173"],
+const corsOptions = {
+  origin: [
+    "https://weholdahand.com",
+    "https://www.weholdahand.com",
+    "www.weholdahand.netlify.app",
+    "http://localhost:5173",
+  ],
   methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
   credentials: true,
 };
