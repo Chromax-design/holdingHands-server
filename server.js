@@ -15,6 +15,7 @@ const corsOptions = {
   origin: [
     "https://weholdahand.com",
     "https://www.weholdahand.com",
+    "https://weholdahand.netlify.app",
     "http://localhost:5173",
   ],
   methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
