@@ -11,6 +11,7 @@ const io = new Server(server, {
       "https://weholdahand.netlify.app",
       "http://localhost:5173",
     ],
+    credentials: true,
   },
 });
 
