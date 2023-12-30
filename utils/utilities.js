@@ -2,31 +2,30 @@ const crypto = require("crypto");
 const jwt = require("jsonwebtoken");
 const { selectData } = require("./sqlHandlers");
 
-const generateLink = () => {
-  const token = crypto.randomBytes(16).toString("hex");
-  const expirationTime = Date.now() + 24 * 60 * 60 * 1000;
-  const link = `${backendUrl}?userId=${userId}&token=${token}&expires=${expirationTime}&redirect=${frontendUrl}/${userId}/${token}`;
-
-
-  return link;
-};
-
-const verifyOTP = (storedTimestamp)=> {
+const verifyOTP = async (otp) => {
+  const checkOtp = await selectData("otp", "otp", otp);
   const currentTime = new Date();
-  const timeDifference = currentTime - storedTimestamp;
+  const timeDifference = currentTime - checkOtp[0].time;
   const isExpired = timeDifference > 60 * 60 * 1000; // 1 hr
   if (isExpired) {
-    return false
-  }else{
-    return true
+    return false;
+  } else {
+    return true;
   }
-}
+};
 
 const genAccessToken = (userId) => {
   const accessToken = jwt.sign({ userId }, process.env.PRIVATE_KEY, {
     expiresIn: "2d",
   });
   return accessToken;
+};
+
+const generateOTP = () => {
+  const otp = Math.floor(100000 + Math.random() * 900000);
+  return {
+    otp: otp.toString(),
+  };
 };
 
 const createMessage = (messsage, subject, otp) => {
@@ -174,8 +173,8 @@ const createMessage = (messsage, subject, otp) => {
 };
 
 module.exports = {
-  generateLink,
   genAccessToken,
   createMessage,
   verifyOTP,
+  generateOTP,
 };

@@ -14,8 +14,10 @@ const {
   handleReviews,
   getReviews,
   checkSubscribed,
-  checkEmail,
-  resetPwd,
+  ConfirmRegistration,
+  ResendOtp,
+  ResetPassword,
+  UpdatePassword,
 } = require("../controllers/menteeControllers");
 const multer = require("multer");
 const checkSubscriptionExpiration = require("../middlewares/checkSubscription");
@@ -29,7 +31,10 @@ menteeRouter.get("/", getAllMentees);
 menteeRouter.get("/:userId", getMenteeDetails);
 
 menteeRouter.post("/register", Register);
-menteeRouter.post("/checkEmail", checkEmail)
+menteeRouter.put("/confirm-registration/:userId", ConfirmRegistration);
+menteeRouter.post("/resend-otp", ResendOtp);
+menteeRouter.post("/password-reset", ResetPassword);
+menteeRouter.put("/update-password/:userId", UpdatePassword);
 
 menteeRouter.post("/login", Login);
 menteeRouter.post("/loginWithGoogle", loginWithGoogle);
@@ -38,7 +43,6 @@ menteeRouter.put("/application/:userId", updateApplication);
 menteeRouter.put("/upload/:userId", upload.single("file"), Upload);
 menteeRouter.put("/userdetails/:userId", updateDetails);
 menteeRouter.put("/menteeprofile/:userId", updateMenteeProfile);
-menteeRouter.put("/resetpwd/:userId", resetPwd);
 
 menteeRouter.post("/reviews", handleReviews);
 menteeRouter.get("/reviews/:mentorId", getReviews);

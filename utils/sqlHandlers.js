@@ -18,18 +18,23 @@ const insertData = async (tableName, data) => {
   return rows;
 };
 
-const selectData = async (tableName, identifier, value, columnName) => {
-  let sql = `SELECT * FROM ${tableName}`;
-  if (identifier && value) {
-    sql = `SELECT * FROM ${tableName} WHERE ${identifier} = ?`;
-  }
+const selectData = async (tableName, identifier, value, columnName, limit) => {
+  let sql;
 
   if (columnName) {
-    // Selecting a specific column
     sql = `SELECT ${columnName} FROM ${tableName}`;
     if (identifier && value) {
-      sql = `SELECT ${columnName} FROM ${tableName} WHERE ${identifier} = ?`;
+      sql += ` WHERE ${identifier} = ?`;
     }
+  } else {
+    sql = `SELECT * FROM ${tableName}`;
+    if (identifier && value) {
+      sql += ` WHERE ${identifier} = ?`;
+    }
+  }
+
+  if (limit) {
+    sql += ` LIMIT ${limit}`;
   }
 
   try {
@@ -37,7 +42,7 @@ const selectData = async (tableName, identifier, value, columnName) => {
     return rows;
   } catch (error) {
     console.error(error);
-    throw error; // You might want to handle or log the error appropriately
+    throw error;
   }
 };
 
@@ -63,7 +68,7 @@ const updateData = async (tableName, updates, identifier, value) => {
 
 const searchData = async (tableName, identifier, wildcard) => {
   try {
-    const sql = `SELECT * FROM ${tableName} WHERE ${identifier} LIKE ?`;
+    const sql = `SELECT * FROM ${tableName} WHERE verified = true AND ${identifier} LIKE ?`;
     const [rows] = await pool.query(sql, [`%${wildcard}%`]);
     return rows;
   } catch (err) {

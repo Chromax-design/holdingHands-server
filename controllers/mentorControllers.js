@@ -1,14 +1,25 @@
 const bcrypt = require("bcryptjs");
 const { v4: uuidv4 } = require("uuid");
 const crypto = require("crypto");
-
+const {
+  genAccessToken,
+  createMessage,
+  generateOTP,
+  verifyOTP,
+} = require("../utils/utilities");
+const {
+  getMenteeSubscribed,
+  getPaymentDetails,
+  getReviewCount,
+} = require("../utils/mentorSqlHandlers");
+const sendEmail = require("../utils/mailer");
 const {
   insertData,
   selectData,
   searchData,
   updateData,
+  deleteData,
 } = require("../utils/sqlHandlers");
-
 const cloudinary = require("cloudinary").v2;
 
 cloudinary.config({
@@ -17,23 +28,14 @@ cloudinary.config({
   api_secret: "X5XpIpJG-jBLi84rQWsNuzu0Hg8",
 });
 
-const {
-  genAccessToken,
-} = require("../utils/utilities");
-const {
-  getMenteeSubscribed,
-  getPaymentDetails,
-  getReviewCount,
-} = require("../utils/mentorSqlHandlers");
-
 const getAllMentors = async (req, res) => {
-  const data = await selectData("mentors", "verified", true);
+  const data = await selectData("mentors", "verified", true, undefined, 12);
   return res.status(200).json({ mentors: [...data] });
 };
 
 const getMentorProfile = async (req, res) => {
   const { userId } = req.params;
-  const data = await selectData("mentors", "id", userId);
+  const data = await selectData("mentors", "userId", userId);
   return res.status(200).json({ profile: [...data] });
 };
 
@@ -65,7 +67,8 @@ const handleSearch = async (req, res) => {
 };
 
 const Register = async (req, res) => {
-  const { firstName, initials, email, password, telNumber } = req.body;
+  const { firstName, initials, email, password, confirmPassword, telNumber } =
+    req.body;
   const saltRounds = 12;
   const salt = await bcrypt.genSalt(saltRounds);
   const hashedPassword = await bcrypt.hash(password, salt);
@@ -78,6 +81,10 @@ const Register = async (req, res) => {
     password: hashedPassword,
   };
 
+  if (password !== confirmPassword) {
+    return res.status(401).json({ message: "Passwords do not match" });
+  }
+
   const existingUsers = await selectData("mentors", "email", email);
   if (existingUsers.length > 0) {
     return res
@@ -85,59 +92,88 @@ const Register = async (req, res) => {
       .json({ success: false, message: "User already exists" });
   }
 
-  const { insertId } = await insertData("mentors", user);
-  console.log(insertId);
+  const message =
+    "Thank you for registering with our service. To complete the registration process. Please enter this OTP on our website to verify your email address. Note that this OTP is valid for a limited time. If you did not sign up for our service, please ignore this email.";
+  const subject = "Email verification";
+  const { otp } = generateOTP();
+  const format = createMessage(message, subject, otp);
+  const tokenData = {
+    otp,
+  };
+
+  await insertData("otp", tokenData);
+  await sendEmail(email, subject, format);
+  await insertData("mentors", user);
   return res.status(200).json({
     success: true,
-    message: "Success! Please update your application",
-    userId: insertId,
+    message: "Please verify your email",
+    userId: user.userId,
   });
 };
 
-const checkEmail = async (req, res) => {
-  const { email } = req.body;
-  console.log(email);
-  const data = await selectData("mentors", "email", email);
-  if (data.length == 0) {
-    return res.status(404).json({ message: "Email not found" });
+const ConfirmRegistration = async (req, res) => {
+  const { otp } = req.body;
+  const { userId } = req.params;
+  const isValid = await verifyOTP(otp);
+  if (isValid) {
+    const update = {
+      accountVerified: true,
+    };
+    await updateData("mentors", update, "userId", userId);
+    await deleteData("otp", "otp", otp);
+    return res.status(200).json({
+      success: true,
+      message: "Account verification was successful",
+      userId,
+    });
+  } else {
+    return res.status(401).json({ message: "Invalid token" });
   }
-  res.json({ valid: true, userId: data[0].id });
 };
 
-const updateApplication = async (req, res) => {
+const ResendOtp = async (req, res) => {
+  const { email } = req.body;
+  try {
+    const getDetails = await selectData("mentors", "email", email);
+    if (getDetails.length == 0) {
+      return res.status(404).json({ message: "Email not found" });
+    }
+    const userId = getDetails[0].userId;
+
+    const message =
+      "You recently requested a new One-Time Password (OTP) for your account. Please use the following OTP to complete your request:";
+    const subject = "Your One-Time Password (OTP) Request";
+    const { otp } = generateOTP();
+    const format = createMessage(message, subject, otp);
+    const tokenData = {
+      otp,
+    };
+
+    await insertData("otp", tokenData);
+    await sendEmail(email, subject, format);
+    return res.status(200).json({
+      success: true,
+      message: "Your One-Time Password (OTP) Request",
+      userId,
+    });
+  } catch (error) {
+    console.error(error);
+  }
+};
+
+const UpdateApplication = async (req, res) => {
   const { userId } = req.params;
-  const {
-    job_title,
-    industry,
-    experience,
-    social_link,
-    bio,
-    why_mentoring,
-    telNumber,
-  } = req.body;
+  const application = req.body;
   const updates = {
-    job_title,
-    industry,
-    experience,
-    social_link,
-    bio,
-    why_mentoring,
-    telNumber,
+    ...application,
     updated: true,
   };
   try {
-    const updated = await updateData("mentors", updates, "id", userId);
-    if (updated === false) {
-      return res.json({
-        success: false,
-        message: "There was an error in your application",
-      });
-    } else {
-      return res.json({
-        success: true,
-        message: "Application submitted successfully",
-      });
-    }
+    await updateData("mentors", updates, "userId", userId);
+    return res.json({
+      success: true,
+      message: "Application submitted successfully",
+    });
   } catch (error) {
     console.log(error);
   }
@@ -197,14 +233,7 @@ const Upload = async (req, res) => {
 };
 
 const updateDetails = async (req, res) => {
-  const {
-    firstName,
-    initials,
-    skills,
-    bio,
-    How_help,
-    country,
-  } = req.body;
+  const { firstName, initials, skills, bio, How_help, country } = req.body;
   const { userId } = req.params;
   const updates = {
     firstName,
@@ -253,21 +282,41 @@ const updateMentorProfile = async (req, res) => {
   }
 };
 
-const resetPwd = async (req, res) => {
-  const { password, confirm_password } = req.body;
-  const { userId } = req.params;
+const ResetPassword = async (req, res) => {
+  const { email, password, confirmPassword } = req.body;
   try {
-    if (password === confirm_password) {
-      const salt = await bcrypt.genSalt(12);
-      const hashed = await bcrypt.hash(password, salt);
-      const update = { password: hashed };
-      await updateData("mentors", update, "id", userId);
-      return res.status(200).json({ message: "Password updated successfully" });
-    } else {
+    const checkEmail = await selectData("mentors", "email", email);
+    if (checkEmail.length == 0) {
+      return res.status(404).json({ message: "Email not found" });
+    }
+
+    if (password !== confirmPassword) {
       return res.status(400).json({ message: "Passwords do not match" });
     }
+    const salt = await bcrypt.genSalt(12);
+    const hashed = await bcrypt.hash(password, salt);
+    const update = { password: hashed };
+    await updateData("mentors", update, "email", email);
+    return res.status(200).json({ message: "Password updated successfully" });
   } catch (error) {
-    console.log(error);
+    console.error(error);
+  }
+};
+
+const UpdatePassword = async (req, res) => {
+  const { userId } = req.params;
+  const { password, confirmPassword } = req.body;
+  try {
+    if (password !== confirmPassword) {
+      return res.status(400).json({ message: "Passwords do not match" });
+    }
+    const salt = await bcrypt.genSalt(12);
+    const hashed = await bcrypt.hash(password, salt);
+    const update = { password: hashed };
+    await updateData("mentors", update, "userId", userId);
+    return res.status(200).json({ message: "Password updated successfully" });
+  } catch (error) {
+    console.error(error);
   }
 };
 
@@ -275,7 +324,6 @@ const paymentDetails = async (req, res) => {
   const { userId } = req.params;
   try {
     const data = await getPaymentDetails(userId);
-    // console.log(data);
     return res.json({ message: "received", payment: data });
   } catch (error) {
     console.log(error);
@@ -286,7 +334,6 @@ const getMyMentees = async (req, res) => {
   const { userId } = req.params;
   try {
     const data = await getMenteeSubscribed(userId);
-    // console.log(data)
     return res.json({ message: "received", subscribed: data });
   } catch (error) {
     console.log(error);
@@ -309,9 +356,11 @@ module.exports = {
   searchMentor,
   handleSearch,
   Register,
-  checkEmail,
-  resetPwd,
-  updateApplication,
+  ConfirmRegistration,
+  ResendOtp,
+  ResetPassword,
+  UpdatePassword,
+  UpdateApplication,
   Login,
   Upload,
   updateDetails,

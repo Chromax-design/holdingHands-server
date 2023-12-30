@@ -1,8 +1,8 @@
 const express = require("express");
 const {
   Register,
-  resetPwd,
-  updateApplication,
+  ResetPassword,
+  UpdateApplication,
   Login,
   Upload,
   updateMentorProfile,
@@ -14,7 +14,9 @@ const {
   getMyMentees,
   paymentDetails,
   countReview,
-  checkEmail,
+  ConfirmRegistration,
+  ResendOtp,
+  UpdatePassword,
 } = require("../controllers/mentorControllers");
 const multer = require("multer");
 const mentorRouter = express.Router();
@@ -28,18 +30,20 @@ mentorRouter.get("/search/:industry", searchMentor);
 mentorRouter.post("/search", handleSearch);
 
 mentorRouter.post("/register", Register);
-mentorRouter.post("/checkEmail", checkEmail)
-mentorRouter.put("/resetpwd/:userId", resetPwd);
-
+mentorRouter.put("/confirm-registration/:userId", ConfirmRegistration);
+mentorRouter.post("/resend-otp", ResendOtp);
+mentorRouter.post("/password-reset", ResetPassword);
+mentorRouter.put("/update-password/:userId", UpdatePassword);
 mentorRouter.post("/login", Login);
-mentorRouter.put("/application/:userId", updateApplication);
+
+mentorRouter.put("/application/:userId", UpdateApplication);
 mentorRouter.put("/upload/:userId", upload.single("file"), Upload);
 mentorRouter.put("/userdetails/:userId", updateDetails);
 mentorRouter.put("/mentorprofile/:userId", updateMentorProfile);
 
-mentorRouter.get("/reviews/:userId", countReview)
+mentorRouter.get("/reviews/:userId", countReview);
 
-mentorRouter.get("/payments/:userId", paymentDetails)
-mentorRouter.get("/myMentees/:userId", getMyMentees)
+mentorRouter.get("/payments/:userId", paymentDetails);
+mentorRouter.get("/myMentees/:userId", getMyMentees);
 
 module.exports = mentorRouter;
